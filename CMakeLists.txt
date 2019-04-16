@@ -57,8 +57,8 @@ include_directories(external/glad/include)
 # Sources
 
 file(GLOB_RECURSE GLSL_SOURCES
-    "src/shaders/*.vsh"
-    "src/shaders/*.fsh"
+    "src/*.vsh"
+    "src/*.fsh"
 )
 
 file(GLOB_RECURSE TEXTURE_SOURCES

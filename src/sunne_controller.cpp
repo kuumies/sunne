@@ -1,0 +1,123 @@
+/* ---------------------------------------------------------------- *
+   Antti Jumpponen <kuumies@gmail.com>
+   Implementation of kuu::sunne::Controller class.
+ * ---------------------------------------------------------------- */
+
+#include "sunne_controller.h"
+#include "renderer/opengl/sunne_opengl_renderer.h"
+#include "window/sunne_opengl_window.h"
+#include "window/sunne_window_parameters.h"
+#include "window/sunne_window_user_input.h"
+
+namespace kuu
+{
+namespace sunne
+{
+
+/* ---------------------------------------------------------------- *
+ * ---------------------------------------------------------------- */
+struct Controller::Impl
+{
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    Impl(Controller* self)
+        : self(self)
+        , closeApp(false)
+    {}
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    void createWindow()
+    {
+        WindowParams params;
+        params.opengl.major = 3;
+        params.opengl.minor = 3;
+        params.vSync        = true;
+        params.title        = "Sunne";
+        params.callback     = self;
+
+        window = std::make_shared<OpenGLWindow>(params);
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    void createRenderer(const glm::ivec2& size)
+    {
+        renderer = std::make_shared<OpenGLRenderer>(size);
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    void resize(const glm::ivec2& size)
+    {
+        renderer->resize(size);
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    void render()
+    {
+        renderer->render();
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    Controller* self;
+    std::shared_ptr<Window> window;
+    std::shared_ptr<Renderer> renderer;
+    bool closeApp;
+};
+
+/* ---------------------------------------------------------------- *
+ * ---------------------------------------------------------------- */
+Controller::Controller()
+    : impl(std::make_shared<Impl>(this))
+{}
+
+/* ---------------------------------------------------------------- *
+ * ---------------------------------------------------------------- */
+void Controller::run()
+{
+    if (impl->window)
+        return;
+    impl->createWindow();
+    impl->window->run();
+}
+
+/* ---------------------------------------------------------------- *
+ * ---------------------------------------------------------------- */
+void Controller::initialize(const glm::ivec2& size, GLFWwindow* /*window*/)
+{
+    impl->createRenderer(size);
+}
+
+/* ---------------------------------------------------------------- *
+ * ---------------------------------------------------------------- */
+void Controller::resize(const glm::ivec2& size)
+{ impl->resize(size); }
+
+/* ---------------------------------------------------------------- *
+ * ---------------------------------------------------------------- */
+void Controller::update(double /*elapsed*/)
+{}
+
+/* ---------------------------------------------------------------- *
+ * ---------------------------------------------------------------- */
+void Controller::render()
+{ impl->render(); }
+
+/* ---------------------------------------------------------------- *
+ * ---------------------------------------------------------------- */
+bool Controller::closeApplication()
+{ return impl->closeApp; }
+
+/* ---------------------------------------------------------------- *
+ * ---------------------------------------------------------------- */
+void Controller::setUserInput(const WindowUserInput& i)
+{
+    if (i.key.key == GLFW_KEY_ESCAPE)
+        impl->closeApp = true;
+}
+
+} // namespace sunne
+} // namespace kuu

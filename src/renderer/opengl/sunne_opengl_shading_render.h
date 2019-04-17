@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------- *
    Antti Jumpponen <kuumies@gmail.com>
-   Definition of kuu::sunne::OpenGLSunRender class
+   Definition of kuu::sunne::OpenGLShadingRender class
  * ---------------------------------------------------------------- */
  
 #pragma once
@@ -16,10 +16,10 @@ namespace sunne
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-class OpenGLSunRender
+class OpenGLShadingRender
 {
 public:
-    OpenGLSunRender(const glm::ivec2& size);
+    OpenGLShadingRender(const glm::ivec2& size);
     void resize(const glm::ivec2& size);
     void draw();
 

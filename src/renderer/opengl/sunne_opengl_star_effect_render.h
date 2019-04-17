@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------- *
    Antti Jumpponen <kuumies@gmail.com>
-   Definition of kuu::OpenGLCompose class.
+   Definition of kuu::sunne::OpenGLStarEffectRender class
  * ---------------------------------------------------------------- */
  
 #pragma once
@@ -15,17 +15,17 @@ namespace sunne
 { 
 
 /* ---------------------------------------------------------------- *
+   Renders the sun effects into framebuffer that can be later
+   used during composion.
  * ---------------------------------------------------------------- */
-class OpenGLCompose
+class OpenGLStarEffectRender
 {
 public:
-    OpenGLCompose();
+    OpenGLStarEffectRender(const glm::ivec2& size);
+    void resize(const glm::ivec2& size);
     void draw();
 
-    float exposure          = 0.1f;
-    GLuint shadingTexMap    = 0;
-    GLuint atmosphereTexMap = 0;
-    GLuint starTexMap       = 0;
+    GLuint tex = 0;
 
 private:
     struct Impl;

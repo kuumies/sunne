@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------- *
    Antti Jumpponen <kuumies@gmail.com>
-   kuu::OpenGLSunRender vertex shader.
+   kuu::OpenGLStarEffectRender vertex shader.
  * ---------------------------------------------------------------- */
 
 #version 330 core

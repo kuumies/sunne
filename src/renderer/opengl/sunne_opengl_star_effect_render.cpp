@@ -1,9 +1,9 @@
 /* ---------------------------------------------------------------- *
    Antti Jumpponen <kuumies@gmail.com>
-   The implementation of kuu::sunne::OpenGLSunRender class
+   The implementation of kuu::sunne::OpenGLStarEffectRender class
  * ---------------------------------------------------------------- */
  
-#include "sunne_opengl_sun_render.h"
+#include "sunne_opengl_star_effect_render.h"
 #include "sunne_opengl_ndc_mesh.h"
 #include "sunne_opengl_shader_loader.h"
 
@@ -14,11 +14,11 @@ namespace sunne
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-struct OpenGLSunRender::Impl
+struct OpenGLStarEffectRender::Impl
 {
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
-    Impl(const glm::ivec2& size, OpenGLSunRender* self)
+    Impl(const glm::ivec2& size, OpenGLStarEffectRender* self)
         : size(size)
         , self(self)
     {
@@ -110,8 +110,8 @@ struct OpenGLSunRender::Impl
     void createShader()
     {
         pgm = opengl_shader_loader::load(
-                "shaders/sunne_opengl_sun_render.vsh",
-                "shaders/sunne_opengl_sun_render.fsh");
+                "shaders/sunne_opengl_star_effect_render.vsh",
+                "shaders/sunne_opengl_star_effect_render.fsh");
     }
 
     /* ------------------------------------------------------------ *
@@ -169,7 +169,7 @@ struct OpenGLSunRender::Impl
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
     glm::ivec2 size;
-    OpenGLSunRender* self;
+    OpenGLStarEffectRender* self;
     GLuint rbo = 0;
     GLuint fbo = 0;
     GLuint pgm = 0;
@@ -178,16 +178,16 @@ struct OpenGLSunRender::Impl
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-OpenGLSunRender::OpenGLSunRender(const glm::ivec2& size)
+OpenGLStarEffectRender::OpenGLStarEffectRender(const glm::ivec2& size)
     : impl(std::make_shared<Impl>(size, this))
 {}
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-void OpenGLSunRender::resize(const glm::ivec2& size)
+void OpenGLStarEffectRender::resize(const glm::ivec2& size)
 { impl->resize(size); }
 
-void OpenGLSunRender::draw()
+void OpenGLStarEffectRender::draw()
 { impl->draw(); }
 
 } // namespace sunne

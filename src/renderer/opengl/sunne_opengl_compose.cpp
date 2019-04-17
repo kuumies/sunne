@@ -40,8 +40,10 @@ struct OpenGLCompose::Impl
         pgm = opengl_shader_loader::load(
             "shaders/sunne_opengl_compose.vsh",
             "shaders/sunne_opengl_compose.fsh");
-        uniformTexMap   = glGetUniformLocation(pgm, "texMap");
-        uniformExposure = glGetUniformLocation(pgm, "exposure");
+        uniformShadingTexMap    = glGetUniformLocation(pgm, "shadingTexMap");
+        uniformAtmosphereTexMap = glGetUniformLocation(pgm, "atmosphereTexMap");
+        uniformStarTexMap       = glGetUniformLocation(pgm, "starTexMap");
+        uniformExposure         = glGetUniformLocation(pgm, "exposure");
     }
 
     /* ------------------------------------------------------------ *
@@ -70,11 +72,19 @@ struct OpenGLCompose::Impl
     void draw()
     {
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, self->texMap);
+        glBindTexture(GL_TEXTURE_2D, self->shadingTexMap);
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, self->atmosphereTexMap);
+
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, self->starTexMap);
 
         glUseProgram(pgm);
-        glUniform1i(uniformTexMap,   0);
-        glUniform1f(uniformExposure, self->exposure);
+        glUniform1i(uniformShadingTexMap,    0);
+        glUniform1i(uniformAtmosphereTexMap, 1);
+        glUniform1i(uniformStarTexMap,       2);
+        glUniform1f(uniformExposure,         self->exposure);
 
         ndcQuad->draw();
     }
@@ -83,7 +93,9 @@ struct OpenGLCompose::Impl
      * ------------------------------------------------------------ */
     OpenGLCompose* self;
     GLuint pgm;
-    GLint uniformTexMap;
+    GLint uniformShadingTexMap;
+    GLint uniformAtmosphereTexMap;
+    GLint uniformStarTexMap;
     GLint uniformExposure;
     std::shared_ptr<NdcQuadMesh> ndcQuad;
 };

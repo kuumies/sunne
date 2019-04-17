@@ -5,8 +5,10 @@
 
 #include "sunne_opengl_renderer.h"
 #include <glad/glad.h>
+#include "sunne_opengl_atmosphere_effect_render.h"
 #include "sunne_opengl_compose.h"
-#include "sunne_opengl_sun_render.h"
+#include "sunne_opengl_shading_render.h"
+#include "sunne_opengl_star_effect_render.h"
 
 namespace kuu
 {
@@ -21,8 +23,10 @@ struct OpenGLRenderer::Impl
      * ------------------------------------------------------------ */
     Impl(const glm::ivec2& size)
         : size(size)
+        , shading(std::make_shared<OpenGLShadingRender>(size))
+        , atmosphereEffect(std::make_shared<OpenGLAtmosphereEffectRender>(size))
+        , starEffect(std::make_shared<OpenGLStarEffectRender>(size))
         , compose(std::make_shared<OpenGLCompose>())
-        , sunRender(std::make_shared<OpenGLSunRender>(size))
     {}
 
     /* ------------------------------------------------------------ *
@@ -30,27 +34,35 @@ struct OpenGLRenderer::Impl
     void resize(const glm::ivec2& newSize)
     {
         size = newSize;
-        sunRender->resize(newSize);
+        shading->resize(newSize);
+        atmosphereEffect->resize(newSize);
+        starEffect->resize(newSize);
     }
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
     void render()
     {
-        sunRender->draw();
+        shading->draw();
+        atmosphereEffect->draw();
+        starEffect->draw();
         glEnable(GL_DEPTH_TEST);
         glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
         glViewport(0, 0, size.x, size.y);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        compose->texMap = sunRender->tex;
+        compose->shadingTexMap    = shading->tex;
+        compose->atmosphereTexMap = atmosphereEffect->tex;
+        compose->starTexMap       = starEffect->tex;
         compose->draw();
     }
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
     glm::ivec2 size;
+    std::shared_ptr<OpenGLShadingRender> shading;
+    std::shared_ptr<OpenGLAtmosphereEffectRender> atmosphereEffect;
+    std::shared_ptr<OpenGLStarEffectRender> starEffect;
     std::shared_ptr<OpenGLCompose> compose;
-    std::shared_ptr<OpenGLSunRender> sunRender;
 };
 
 /* ---------------------------------------------------------------- *

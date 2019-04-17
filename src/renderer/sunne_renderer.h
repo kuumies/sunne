@@ -13,6 +13,10 @@ namespace kuu
 namespace sunne
 {
 
+/* ---------------------------------------------------------------- */
+
+class RendererScene;
+
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
 class Renderer
@@ -21,7 +25,7 @@ public:
     Renderer();
     virtual ~Renderer();
     virtual void resize(const glm::ivec2& size) = 0;
-    virtual void render() = 0;
+    virtual void render(const RendererScene& scene) = 0;
 };
 
 } // namespace sunne

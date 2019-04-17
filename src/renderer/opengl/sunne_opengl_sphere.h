@@ -1,12 +1,11 @@
 /* ---------------------------------------------------------------- *
    Antti Jumpponen <kuumies@gmail.com>
-   Definition of kuu::sunne::Camera class.
+   Definition of kuu::sunne::OpenGLSphere class.
  * ---------------------------------------------------------------- */
 
 #pragma once
 
-#include <glm/gtx/dual_quaternion.hpp>
-#include <glm/mat4x4.hpp>
+#include <memory>
 
 namespace kuu
 {
@@ -15,19 +14,16 @@ namespace sunne
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-class Camera
+class OpenGLSphere
 {
 public:
-    glm::mat4 viewMatrix() const;
-    glm::mat4 projectionMatrix() const;
+    OpenGLSphere(float radius);
 
-    glm::vec3 position = glm::vec3(0.0f, 0.0f, 5.0f);
-    glm::quat rotation = glm::quat();
+    void draw();
 
-    float fieldOfView = 45.0f;
-    float aspectRatio = 1.0f;
-    float nearPlane   = 0.1f;
-    float farPlane    = 150.0f;
+private:
+    struct Impl;
+    std::shared_ptr<Impl> impl;
 };
 
 } // namespace sunne

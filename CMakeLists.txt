@@ -50,8 +50,14 @@ include_directories(external/glm)
 
 #---------------------------------------------------------------------
 # Glad
+
 add_subdirectory(external/glad)
 include_directories(external/glad/include)
+
+#---------------------------------------------------------------------
+# stb
+
+include_directories(external/stb)
 
 #---------------------------------------------------------------------
 # Sources
@@ -62,8 +68,8 @@ file(GLOB_RECURSE GLSL_SOURCES
 )
 
 file(GLOB_RECURSE TEXTURE_SOURCES
-    "src/textures/*.jpg"
-    "src/textures/*.png"
+    "texture/*.jpg"
+    "texture/*.png"
 )
 
 file(GLOB_RECURSE CPP_SOURCES

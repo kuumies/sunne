@@ -5,6 +5,7 @@
 
 #include "sunne_controller.h"
 #include "renderer/opengl/sunne_opengl_renderer.h"
+#include "renderer/sunne_renderer_scene.h"
 #include "window/sunne_opengl_window.h"
 #include "window/sunne_window_parameters.h"
 #include "window/sunne_window_user_input.h"
@@ -24,6 +25,13 @@ struct Controller::Impl
         : self(self)
         , closeApp(false)
     {}
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    void createScene()
+    {
+        scene = std::make_shared<RendererScene>();
+    }
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
@@ -57,7 +65,7 @@ struct Controller::Impl
      * ------------------------------------------------------------ */
     void render()
     {
-        renderer->render();
+        renderer->render(*scene);
     }
 
     /* ------------------------------------------------------------ *
@@ -65,6 +73,7 @@ struct Controller::Impl
     Controller* self;
     std::shared_ptr<Window> window;
     std::shared_ptr<Renderer> renderer;
+    std::shared_ptr<RendererScene> scene;
     bool closeApp;
 };
 
@@ -80,13 +89,15 @@ void Controller::run()
 {
     if (impl->window)
         return;
+    impl->createScene();
     impl->createWindow();
     impl->window->run();
 }
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-void Controller::initialize(const glm::ivec2& size, GLFWwindow* /*window*/)
+void Controller::initialize(const glm::ivec2& size,
+                            GLFWwindow* /*window*/)
 {
     impl->createRenderer(size);
 }

@@ -1,34 +1,31 @@
 /* ---------------------------------------------------------------- *
    Antti Jumpponen <kuumies@gmail.com>
-   Definition of kuu::sunne::OpenGLShadingRender class
+   Definition of kuu::sunne::OpenGLResources class.
  * ---------------------------------------------------------------- */
- 
+
 #pragma once
 
 #include <memory>
-#include <glad/glad.h>
-#include <glm/vec2.hpp>
+#include "../sunne_renderer_scene.h"
 
 namespace kuu
 {
 namespace sunne
-{ 
+{
 
 /* ---------------------------------------------------------------- */
 
-class OpenGLResources;
-class RendererScene;
+class OpenGLPlanet;
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-class OpenGLShadingRender
+class OpenGLResources
 {
 public:
-    OpenGLShadingRender(const glm::ivec2& size, std::shared_ptr<OpenGLResources> resources);
-    void resize(const glm::ivec2& size);
-    void draw(const RendererScene& scene);
+    OpenGLResources();
 
-    GLuint tex = 0;
+    std::shared_ptr<OpenGLPlanet> openglPlanet(
+        const RendererScene::Planet& planet);
 
 private:
     struct Impl;

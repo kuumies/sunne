@@ -34,6 +34,7 @@ out struct VsOut
     vec2 texCoord;
     vec3 worldNormal;
     vec3 worldPos;
+    vec3 cameraPos;
     mat3 tbn;
 
 } vsOut;
@@ -53,6 +54,7 @@ void main()
     vsOut.texCoord    = texCoord;
     vsOut.worldNormal = matrices.normal * normal;
     vsOut.worldPos    = vec3(matrices.model * vec4(position, 1.0));
+    vsOut.cameraPos   = vec3(matrices.model * matrices.view * vec4(position, 1.0));
     vsOut.tbn         = mat3(t, b, n);
 
     gl_Position = matrices.projection *

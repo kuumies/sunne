@@ -129,6 +129,8 @@ struct OpenGLShadingRender::Impl
         uniformAlbedoMap        = glGetUniformLocation(pgm, "albedoMap");
         uniformNormalMap        = glGetUniformLocation(pgm, "normalMap");
         uniformSpecularMap      = glGetUniformLocation(pgm, "specularMap");
+        uniformCloudMap         = glGetUniformLocation(pgm, "cloudMap");
+        uniformNightMap         = glGetUniformLocation(pgm, "nightMap");
     }
 
     /* ------------------------------------------------------------ *
@@ -181,6 +183,7 @@ struct OpenGLShadingRender::Impl
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
         glViewport(0, 0, size.x, size.y);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(pgm);
@@ -195,6 +198,8 @@ struct OpenGLShadingRender::Impl
         glUniform1i(uniformAlbedoMap,   0);
         glUniform1i(uniformNormalMap,   1);
         glUniform1i(uniformSpecularMap, 2);
+        glUniform1i(uniformCloudMap,    3);
+        glUniform1i(uniformNightMap,    4);
 
         for (const RendererScene::Planet& planet : scene.planets)
         {
@@ -222,6 +227,8 @@ struct OpenGLShadingRender::Impl
     GLint uniformAlbedoMap;
     GLint uniformNormalMap;
     GLint uniformSpecularMap;
+    GLint uniformCloudMap;
+    GLint uniformNightMap;
     std::shared_ptr<NdcQuadMesh> ndcQuad;
     std::shared_ptr<OpenGLSphere> sphere;
     std::shared_ptr<OpenGLResources> resources;

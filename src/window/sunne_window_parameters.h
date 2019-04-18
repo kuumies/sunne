@@ -38,7 +38,7 @@ struct WindowParams
     bool vSync = false;
 
     // Size of window.
-    glm::ivec2 size = glm::ivec2(512, 512);
+    glm::ivec2 size = glm::ivec2(1024, 1024);
 
     // The callback is used for window to give in events to
     // other classes.

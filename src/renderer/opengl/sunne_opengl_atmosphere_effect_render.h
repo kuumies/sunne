@@ -8,6 +8,7 @@
 #include <memory>
 #include <glad/glad.h>
 #include <glm/vec2.hpp>
+#include "../sunne_renderer_scene.h"
 
 namespace kuu
 {
@@ -21,7 +22,7 @@ class OpenGLAtmosphereEffectRender
 public:
     OpenGLAtmosphereEffectRender(const glm::ivec2& size);
     void resize(const glm::ivec2& size);
-    void draw();
+    void draw(const RendererScene& scene);
 
     GLuint tex = 0;
 

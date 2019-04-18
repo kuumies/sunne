@@ -10,6 +10,8 @@
 uniform sampler2D albedoMap;
 uniform sampler2D normalMap;
 uniform sampler2D specularMap;
+uniform sampler2D cloudMap;
+uniform sampler2D nightMap;
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
@@ -18,6 +20,7 @@ in struct VsOut
     vec2 texCoord;
     vec3 worldNormal;
     vec3 worldPos;
+    vec3 cameraPos;
     mat3 tbn;
 
 } vsOut;
@@ -36,10 +39,26 @@ void main()
     n = vsOut.tbn * n;
     n = normalize(n);
 
-    vec3 albedo = texture(albedoMap, vsOut.texCoord).rgb;
+    vec3 v = normalize(-vsOut.cameraPos);
+    vec3 l = normalize(vec3(1, 1, 1));
+    vec3 r = reflect(-l, n);
+    vec2 tc = vsOut.texCoord;
 
-    vec3 lightDir = vec3(0, 1, 0);
-    float nDotL = max(dot(n, lightDir), 0.0);
-    outColor = vec4(vec3(nDotL) * albedo, 1.0);
-    //outColor = vec4(n, 1.0);
+    float nDotL = max(dot(l, n), 0.0);
+    float vDotR = max(dot(v, r), 0.0);
+
+    vec3 albedo = vec3(0.0);
+    //if (nDotL > 0)
+    {
+        albedo = texture(albedoMap, tc).rgb;
+        vec4 clouds = texture(cloudMap,  vsOut.texCoord);
+        albedo = mix(albedo, clouds.rgb, clouds.a) * nDotL;
+    }
+    //else
+    //    albedo = texture(nightMap,  tc).rgb;
+
+    vec3 diffuse  = albedo /** nDotL*/;
+    vec3 specular = vec3(texture(specularMap, tc).r) * pow(vDotR, 128.0);
+
+    outColor = vec4(diffuse, 1.0);
 }

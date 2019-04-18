@@ -55,7 +55,7 @@ struct OpenGLPlanet::Impl
         const int sectorCount = 32;
         const float pi        = float(M_PI);
         const float half_pi   = pi * 0.5f;
-        const float radius    = 1.0f;
+        const float radius    = planet.radius;
 
         const float ringStep   = 1.0f / float(ringCount   - 1);
         const float sectorStep = 1.0f / float(sectorCount - 1);
@@ -196,12 +196,14 @@ struct OpenGLPlanet::Impl
      * ------------------------------------------------------------ */
     void createTextures()
     {
-        texAlbedo   = createTexture(planet.albedoMap);
-        texNormal   = createTexture(planet.normalMap);
-        texSpecular = createTexture(planet.specularMap);
+        texAlbedo   = createTexture(planet.albedoMap,   STBI_rgb,       true);
+        texNormal   = createTexture(planet.normalMap,   STBI_rgb,       false);
+        texSpecular = createTexture(planet.specularMap, STBI_rgb_alpha, false);
+        texCloud    = createTexture(planet.cloudMap,    STBI_rgb_alpha, false);
+        texNight    = createTexture(planet.nightMap,    STBI_rgb_alpha, true);
     }
 
-    GLuint createTexture(const std::string& path)
+    GLuint createTexture(const std::string& path, int req_comp, bool sRgb)
     {
         int imgW, imgH, imgC;
         stbi_uc* pixels = stbi_load(
@@ -209,7 +211,12 @@ struct OpenGLPlanet::Impl
             &imgW,
             &imgH,
             &imgC,
-            STBI_rgb);
+            req_comp);
+
+        std::cout << path << ", "
+                  << imgW << ", "
+                  << imgH << ", "
+                  << imgC << std::endl;
 
         if (!pixels)
             throw std::runtime_error(
@@ -217,13 +224,13 @@ struct OpenGLPlanet::Impl
                     ": failed to load image " +
                     path);
 
-        GLenum format;
+        GLenum format, internalFormat;
         switch(imgC)
         {
-            case 1: format = GL_RED;  break;
-            case 2: format = GL_RG;   break;
-            case 3: format = GL_RGB;  break;
-            case 4: format = GL_RGBA; break;
+            case 1: internalFormat = format = GL_RED;  break;
+            case 2: internalFormat = format = GL_RG;   break;
+            case 3: format = GL_RGB;  internalFormat = sRgb ? GL_SRGB       : GL_RGB;  break;
+            case 4: format = GL_RGBA; internalFormat = sRgb ? GL_SRGB_ALPHA : GL_RGBA; break;
             default:
                 throw std::runtime_error(
                     std::string(__FUNCTION__) +
@@ -236,7 +243,7 @@ struct OpenGLPlanet::Impl
         GLuint tex;
         glGenTextures(1, &tex);
         glBindTexture(GL_TEXTURE_2D,  tex);
-        glTexImage2D(GL_TEXTURE_2D, 0, format,
+        glTexImage2D(GL_TEXTURE_2D, 0, GLint(internalFormat),
                      imgW, imgH, 0,
                      format, GL_UNSIGNED_BYTE, pixels);
 
@@ -275,6 +282,10 @@ struct OpenGLPlanet::Impl
         glBindTexture(GL_TEXTURE_2D, texNormal);
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, texSpecular);
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, texCloud);
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, texNight);
 
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
@@ -291,6 +302,8 @@ struct OpenGLPlanet::Impl
     GLuint texAlbedo;
     GLuint texNormal;
     GLuint texSpecular;
+    GLuint texCloud;
+    GLuint texNight;
 };
 
 /* ---------------------------------------------------------------- *

@@ -47,7 +47,7 @@ struct OpenGLRenderer::Impl
     void render(const RendererScene& scene)
     {
         shading->draw(scene);
-        atmosphereEffect->draw();
+        atmosphereEffect->draw(scene);
         starEffect->draw();
         glEnable(GL_DEPTH_TEST);
         glClearColor(0.2f, 0.2f, 0.2f, 1.0f);

@@ -22,7 +22,7 @@ public:
     OpenGLCompose();
     void draw();
 
-    float exposure          = 0.1f;
+    float exposure          = 0.9f;
     GLuint shadingTexMap    = 0;
     GLuint atmosphereTexMap = 0;
     GLuint starTexMap       = 0;

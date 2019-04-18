@@ -4,6 +4,9 @@
  * ---------------------------------------------------------------- */
  
 #include "sunne_opengl_atmosphere_effect_render.h"
+#include <glm/gtc/matrix_inverse.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include "sunne_opengl_ndc_mesh.h"
 #include "sunne_opengl_shader_loader.h"
 
@@ -112,6 +115,10 @@ struct OpenGLAtmosphereEffectRender::Impl
         pgm = opengl_shader_loader::load(
                 "shaders/sunne_opengl_atmosphere_effect_render.vsh",
                 "shaders/sunne_opengl_atmosphere_effect_render.fsh");
+        uniformViewport             = glGetUniformLocation(pgm, "viewport");
+        uniformInverseView          = glGetUniformLocation(pgm, "inverseView");
+        uniformInverseTransposeView = glGetUniformLocation(pgm, "inverseTransposeView");
+        uniformInverseProjection    = glGetUniformLocation(pgm, "inverseProjection");
     }
 
     /* ------------------------------------------------------------ *
@@ -152,14 +159,22 @@ struct OpenGLAtmosphereEffectRender::Impl
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
-    void draw()
+    void draw(const RendererScene& scene)
     {
+        glm::mat4 invProjection    = glm::inverse(scene.camera.projectionMatrix());
+        glm::mat4 invView          = glm::inverse(scene.camera.viewMatrix());
+        glm::mat3 invTransposeView = glm::inverseTranspose(glm::mat3(invView));
+
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
         glViewport(0, 0, size.x, size.y);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(pgm);
+        glUniform2f(uniformViewport, float(size.x), float(size.y));
+        glUniformMatrix4fv(uniformInverseView,          1, GL_FALSE, glm::value_ptr(glm::mat4(invView)));
+        glUniformMatrix4fv(uniformInverseProjection,    1, GL_FALSE, glm::value_ptr(glm::mat4(invProjection)));
+        glUniformMatrix3fv(uniformInverseTransposeView, 1, GL_FALSE, glm::value_ptr(glm::mat3(invTransposeView)));
 
         ndcQuad->draw();
 
@@ -173,6 +188,10 @@ struct OpenGLAtmosphereEffectRender::Impl
     GLuint rbo = 0;
     GLuint fbo = 0;
     GLuint pgm = 0;
+    GLint uniformViewport;
+    GLint uniformInverseView;
+    GLint uniformInverseTransposeView;
+    GLint uniformInverseProjection;
     std::shared_ptr<NdcQuadMesh> ndcQuad;
 };
 
@@ -187,8 +206,8 @@ OpenGLAtmosphereEffectRender::OpenGLAtmosphereEffectRender(const glm::ivec2& siz
 void OpenGLAtmosphereEffectRender::resize(const glm::ivec2& size)
 { impl->resize(size); }
 
-void OpenGLAtmosphereEffectRender::draw()
-{ impl->draw(); }
+void OpenGLAtmosphereEffectRender::draw(const RendererScene& scene)
+{ impl->draw(scene); }
 
 } // namespace sunne
 } // namespace kuu

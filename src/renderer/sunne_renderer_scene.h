@@ -60,6 +60,8 @@ public:
         std::string albedoMap;
         std::string specularMap;
         std::string normalMap;
+        std::string cloudMap;
+        std::string nightMap;
     };
 
     // Constructs the default scene with sun and earth, camera is

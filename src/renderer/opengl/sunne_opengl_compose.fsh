@@ -27,12 +27,12 @@ out vec4 outColor;
  * ---------------------------------------------------------------- */
 void main()
 {
-    //vec3 color = texture(shadingTexMap, vsOut.texCoord).rgb +
-    //             texture(atmosphereTexMap, vsOut.texCoord).rgb +
-    //             texture(starTexMap, vsOut.texCoord).rgb;
+    vec3 color = mix(texture(shadingTexMap,    vsOut.texCoord).rgb,
+                     texture(atmosphereTexMap, vsOut.texCoord).rgb,
+                     0.6);
 
-    vec3 color = texture(shadingTexMap, vsOut.texCoord).rgb;
-    //color = 1.0 - exp(-exposure * color);
+    //vec3 color = texture(atmosphereTexMap, vsOut.texCoord).rgb;
+    color = 1.0 - exp(-exposure * color);
     color = pow(color.rgb, vec3(1.0/2.2));
     outColor = vec4(color, 1.0);
 }

@@ -173,6 +173,14 @@ struct OpenGLShadingRender::Impl
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
+    void load(const RendererScene& scene)
+    {
+        for (const RendererScene::Planet& planet : scene.planets)
+            resources->openglPlanet(planet)->loadResources();
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
     void draw(const RendererScene& scene)
     {
         const glm::mat4 projectionMatrix = scene.camera.projectionMatrix();
@@ -245,6 +253,11 @@ OpenGLShadingRender::OpenGLShadingRender(const glm::ivec2& size,
  * ---------------------------------------------------------------- */
 void OpenGLShadingRender::resize(const glm::ivec2& size)
 { impl->resize(size); }
+
+/* ---------------------------------------------------------------- *
+ * ---------------------------------------------------------------- */
+void OpenGLShadingRender::load(const RendererScene &scene)
+{ impl->load(scene); }
 
 void OpenGLShadingRender::draw(const RendererScene& scene)
 { impl->draw(scene); }

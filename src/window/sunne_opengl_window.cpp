@@ -29,7 +29,8 @@ void runAsyncJob(GLFWwindow* window, WindowCallback* callback)
 {
     glfwMakeContextCurrent(window);
     callback->runAsync();
-    glFlush(); // Needs to be called, otherwise no textures
+    //glFlush(); // Needs to be called, otherwise no textures
+    //glfwMakeContextCurrent(nullptr);
 }
 
 } // anonymous namespace
@@ -63,18 +64,18 @@ OpenGLWindow::OpenGLWindow(const WindowParams& params)
     glfwInit();
 
     glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-    d->windowTheading =
-        glfwCreateWindow(1, 1, "Threading Window",
-                         NULL, NULL);
 
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, params.opengl.major);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, params.opengl.minor);
-        if (params.opengl.major >= 3)
-            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, params.opengl.major);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, params.opengl.minor);
+    if (params.opengl.major >= 3)
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     #ifdef __APPLE__
         if (params.opengl.major >= 3)
             glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     #endif
+
+
 
     glfwWindowHint(GLFW_RESIZABLE, params.resizable ? GL_TRUE : GL_FALSE);
     glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
@@ -88,8 +89,8 @@ OpenGLWindow::OpenGLWindow(const WindowParams& params)
         (params.title + std::string(" - OpenGL")).c_str(),
         params.fullscreen
             ? monitor
-            : NULL,
-            NULL);
+            : nullptr,
+        nullptr);
 
     if (!window_)
     {
@@ -97,6 +98,11 @@ OpenGLWindow::OpenGLWindow(const WindowParams& params)
             std::string(__FUNCTION__)
                 + ": failed to create GLFW window");
     }
+
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    d->windowTheading =
+        glfwCreateWindow(1, 1, "Threading Window",
+                         nullptr, window_);
 
     callback_ = params.callback;
     WindowMediator::getInstance().callback = callback_;
@@ -123,6 +129,11 @@ OpenGLWindow::OpenGLWindow(const WindowParams& params)
 
     glfwMakeContextCurrent(window_);
     glfwSwapInterval(params.vSync ? 1 : 0);
+
+    if (gladLoadGL() == 0)
+        throw std::runtime_error(
+            std::string(__FUNCTION__) +
+            ": failed to load OpenGL");
 }
 
 /* ---------------------------------------------------------------- *
@@ -130,11 +141,11 @@ OpenGLWindow::OpenGLWindow(const WindowParams& params)
 void OpenGLWindow::run()
 {
     // Make the OpenGL current on the window with this thread.
-    glfwMakeContextCurrent(window_);
-    if (gladLoadGL() == 0)
-        throw std::runtime_error(
-            std::string(__FUNCTION__) +
-            ": failed to load OpenGL");
+    //glfwMakeContextCurrent(window_);
+    //if (gladLoadGL() == 0)
+    //    throw std::runtime_error(
+    //        std::string(__FUNCTION__) +
+    //        ": failed to load OpenGL");
 
     // Reset timer.
     glfwSetTime(0.0);
@@ -157,12 +168,6 @@ void OpenGLWindow::run()
             if (callback_->closeApplication())
                 glfwSetWindowShouldClose(window_, true);
 
-            const double time = glfwGetTime();
-            const double elapsed = time - d->prevTime;
-            d->prevTime = time;
-            callback_->update(elapsed * 1000.0);
-            callback_->render();
-
             if (callback_->startAsync())
             {
                 if (!d->asyncJob.valid())
@@ -178,7 +183,14 @@ void OpenGLWindow::run()
                     == std::future_status::ready)
             {
                 d->asyncJob.get();
+                glfwMakeContextCurrent(window_);
             }
+
+            const double time = glfwGetTime();
+            const double elapsed = time - d->prevTime;
+            d->prevTime = time;
+            callback_->update(elapsed * 1000.0);
+            callback_->render();
 
             frameCounter++;
             elapsedCounter += (elapsed * 1000.0);
@@ -195,7 +207,6 @@ void OpenGLWindow::run()
                 elapsedCounter = 0.0;
             }
         }
-
 
         glfwSwapBuffers(window_);
         glfwPollEvents();

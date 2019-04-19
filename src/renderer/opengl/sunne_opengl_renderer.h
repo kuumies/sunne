@@ -37,6 +37,8 @@ public:
     OpenGLRenderer(const glm::ivec2& size);
     virtual void resize(const glm::ivec2& size) override;
     virtual void render(const RendererScene& scene) override;
+    virtual void loadResources(const RendererScene& scene) override;
+    virtual void renderResourceLoadWait() override;
 
 private:
     struct Impl;

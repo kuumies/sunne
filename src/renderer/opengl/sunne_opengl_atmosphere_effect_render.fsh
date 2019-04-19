@@ -9,7 +9,7 @@
  * ---------------------------------------------------------------- */
 const float PI                     = 3.14159f;
 const vec3 lightDir                = normalize(-vec3(1.0, -1.0, 1.0));
-const vec3 lightIntensity          = vec3(20.0, 20.0, 20.0);
+const vec3 lightIntensity          = vec3(10.0, 10.0, 10.0);
 const int viewRaySampleCount       = 8;
 const int lightRaySampleCount      = 4;
 const float planetRadius           = 6360;

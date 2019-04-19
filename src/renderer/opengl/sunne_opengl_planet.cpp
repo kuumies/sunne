@@ -11,8 +11,7 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glad/glad.h>
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+#include "sunne_opengl_texture_loader.h"
 
 namespace kuu
 {
@@ -34,13 +33,48 @@ struct OpenGLPlanet::Impl
     Impl(const RendererScene::Planet& planet)
         : planet(planet)
     {
-        createMesh();
-        createTextures();
+        //createMeshBuffers();
+        //createMeshVao();
+        //createTextures();
     }
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
-    void createMesh()
+    void createMeshVao()
+    {
+        glGenVertexArrays(1, &vao);
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(2);
+        glEnableVertexAttribArray(3);
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+                              14 * sizeof(float),
+                              BUFFER_OFFSET(0));
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
+                              14 * sizeof(float),
+                              BUFFER_OFFSET(3 * sizeof(float)));
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
+                              14 * sizeof(float),
+                              BUFFER_OFFSET(5 * sizeof(float)));
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE,
+                              14 * sizeof(float),
+                              BUFFER_OFFSET(8 * sizeof(float)));
+        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE,
+                              14 * sizeof(float),
+                              BUFFER_OFFSET(11 * sizeof(float)));
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    void createMeshBuffers()
     {
         struct Vertex
         {
@@ -150,11 +184,9 @@ struct OpenGLPlanet::Impl
             vertexData2.push_back(v.bitangent.z);
         }
 
-        glGenVertexArrays(1, &vao);
         glGenBuffers(1, &vbo);
         glGenBuffers(1, &ibo);
 
-        glBindVertexArray(vao);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER,
                      GLsizeiptr(vertexData2.size() * sizeof(float)),
@@ -166,29 +198,7 @@ struct OpenGLPlanet::Impl
                      indexData.data(),
                      GL_STATIC_DRAW);
 
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-        glEnableVertexAttribArray(2);
-        glEnableVertexAttribArray(3);
-        glEnableVertexAttribArray(4);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-                              14 * sizeof(float),
-                              BUFFER_OFFSET(0));
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
-                              14 * sizeof(float),
-                              BUFFER_OFFSET(3 * sizeof(float)));
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
-                              14 * sizeof(float),
-                              BUFFER_OFFSET(5 * sizeof(float)));
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE,
-                              14 * sizeof(float),
-                              BUFFER_OFFSET(8 * sizeof(float)));
-        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE,
-                              14 * sizeof(float),
-                              BUFFER_OFFSET(11 * sizeof(float)));
-
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 
@@ -196,71 +206,11 @@ struct OpenGLPlanet::Impl
      * ------------------------------------------------------------ */
     void createTextures()
     {
-        texAlbedo   = createTexture(planet.albedoMap,   STBI_rgb,       true);
-        texNormal   = createTexture(planet.normalMap,   STBI_rgb,       false);
-        texSpecular = createTexture(planet.specularMap, STBI_rgb_alpha, false);
-        texCloud    = createTexture(planet.cloudMap,    STBI_rgb_alpha, false);
-        texNight    = createTexture(planet.nightMap,    STBI_rgb_alpha, true);
-    }
-
-    GLuint createTexture(const std::string& path, int req_comp, bool sRgb)
-    {
-        int imgW, imgH, imgC;
-        stbi_uc* pixels = stbi_load(
-            path.c_str(),
-            &imgW,
-            &imgH,
-            &imgC,
-            req_comp);
-
-        std::cout << path << ", "
-                  << imgW << ", "
-                  << imgH << ", "
-                  << imgC << std::endl;
-
-        if (!pixels)
-            throw std::runtime_error(
-                std::string(__FUNCTION__) +
-                    ": failed to load image " +
-                    path);
-
-        GLenum format, internalFormat;
-        switch(imgC)
-        {
-            case 1: internalFormat = format = GL_RED;  break;
-            case 2: internalFormat = format = GL_RG;   break;
-            case 3: format = GL_RGB;  internalFormat = sRgb ? GL_SRGB       : GL_RGB;  break;
-            case 4: format = GL_RGBA; internalFormat = sRgb ? GL_SRGB_ALPHA : GL_RGBA; break;
-            default:
-                throw std::runtime_error(
-                    std::string(__FUNCTION__) +
-                        ": failed to load texture " +
-                        path +
-                        " as it has invalid channel count of " +
-                        std::to_string(imgC));
-        }
-
-        GLuint tex;
-        glGenTextures(1, &tex);
-        glBindTexture(GL_TEXTURE_2D,  tex);
-        glTexImage2D(GL_TEXTURE_2D, 0, GLint(internalFormat),
-                     imgW, imgH, 0,
-                     format, GL_UNSIGNED_BYTE, pixels);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_REPEAT);
-        if (GL_TEXTURE_MAX_ANISOTROPY_EXT)
-        {
-            GLfloat anisotropy = 1.0f;
-            glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &anisotropy);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
-        }
-
-        glGenerateMipmap(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D,  0);
-        return tex;
+        texAlbedo   = opengl_texture_loader::load(planet.albedoMap,   3, true);
+        texNormal   = opengl_texture_loader::load(planet.normalMap,   3, false);
+        texSpecular = opengl_texture_loader::load(planet.specularMap, 4, false);
+        texCloud    = opengl_texture_loader::load(planet.cloudMap,    4, false);
+        texNight    = opengl_texture_loader::load(planet.nightMap,    4, true);
     }
 
     /* ------------------------------------------------------------ *
@@ -274,8 +224,21 @@ struct OpenGLPlanet::Impl
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
+    void loadResources()
+    {
+        createTextures();
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
     void draw()
     {
+        if (vao == 0)
+        {
+            createMeshBuffers();
+            createMeshVao();
+        }
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texAlbedo);
         glActiveTexture(GL_TEXTURE1);
@@ -295,7 +258,7 @@ struct OpenGLPlanet::Impl
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
     const RendererScene::Planet planet;
-    GLuint vao;
+    GLuint vao = 0;
     GLuint vbo;
     GLuint ibo;
     GLsizei indexCount;
@@ -314,10 +277,13 @@ OpenGLPlanet::OpenGLPlanet(const RendererScene::Planet& planet)
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
+void OpenGLPlanet::loadResources()
+{ impl->loadResources(); }
+
+/* ---------------------------------------------------------------- *
+ * ---------------------------------------------------------------- */
 void OpenGLPlanet::draw()
-{
-    impl->draw();
-}
+{ impl->draw(); }
 
 } // namespace sunne
 } // namespace kuu

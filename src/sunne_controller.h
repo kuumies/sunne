@@ -28,6 +28,8 @@ public:
     void render() override;
     bool closeApplication() override;
     void setUserInput(const WindowUserInput& i) override;
+    bool startAsync() override;
+    void runAsync() override;
 
 private:
     struct Impl;

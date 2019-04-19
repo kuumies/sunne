@@ -1,33 +1,30 @@
 /* ---------------------------------------------------------------- *
    Antti Jumpponen <kuumies@gmail.com>
-   Definition of kuu::sunne::Renderer class.
+   Definition of kuu::sunne::OpenGLLoading class
  * ---------------------------------------------------------------- */
-
+ 
 #pragma once
 
 #include <memory>
+#include <glad/glad.h>
 #include <glm/vec2.hpp>
 
 namespace kuu
 {
 namespace sunne
-{
-
-/* ---------------------------------------------------------------- */
-
-class RendererScene;
+{ 
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-class Renderer
+class OpenGLLoading
 {
 public:
-    Renderer();
-    virtual ~Renderer();
-    virtual void loadResources(const RendererScene& scene) = 0;
-    virtual void resize(const glm::ivec2& size) = 0;
-    virtual void render(const RendererScene& scene) = 0;
-    virtual void renderResourceLoadWait() = 0;
+    OpenGLLoading();
+    void draw();
+
+private:
+    struct Impl;
+    std::shared_ptr<Impl> impl;
 };
 
 } // namespace sunne

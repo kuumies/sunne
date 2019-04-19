@@ -1,16 +1,13 @@
 /* ---------------------------------------------------------------- *
    Antti Jumpponen <kuumies@gmail.com>
-   kuu::OpenGLCompose fragment shader.
+   kuu::OpenGLLoading fragment shader.
  * ---------------------------------------------------------------- */
-
+ 
 #version 330 core
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-uniform sampler2D shadingTexMap;
-uniform sampler2D atmosphereTexMap;
-uniform sampler2D starTexMap;
-uniform float exposure;
+uniform sampler2D tex;
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
@@ -27,12 +24,5 @@ out vec4 outColor;
  * ---------------------------------------------------------------- */
 void main()
 {
-    vec3 color = mix(texture(shadingTexMap,    vsOut.texCoord).rgb,
-                     texture(atmosphereTexMap, vsOut.texCoord).rgb,
-                     0.6);
-
-    //color = texture(atmosphereTexMap, vsOut.texCoord).rgb;
-    color = 1.0 - exp(-exposure * color);
-    color = pow(color.rgb, vec3(1.0/2.2));
-    outColor = vec4(color, 1.0);
+    outColor = texture(tex, vsOut.texCoord);
 }

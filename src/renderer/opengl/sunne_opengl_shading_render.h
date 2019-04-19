@@ -26,6 +26,7 @@ class OpenGLShadingRender
 public:
     OpenGLShadingRender(const glm::ivec2& size, std::shared_ptr<OpenGLResources> resources);
     void resize(const glm::ivec2& size);
+    void load(const RendererScene& scene);
     void draw(const RendererScene& scene);
 
     GLuint tex = 0;

@@ -1,32 +1,25 @@
 /* ---------------------------------------------------------------- *
    Antti Jumpponen <kuumies@gmail.com>
-   Definition of kuu::sunne::OpenGLPlanet class.
+   Definition of kuu::sunne::opengl_texture_loader namespace.
  * ---------------------------------------------------------------- */
 
 #pragma once
 
 #include <memory>
-#include "../sunne_renderer_scene.h"
+#include <string>
+#include <glad/glad.h>
 
 namespace kuu
 {
 namespace sunne
 {
+namespace opengl_texture_loader
+{
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-class OpenGLPlanet
-{
-public:
-    OpenGLPlanet(const RendererScene::Planet& planet);
+GLuint load(const std::string& path, int req_comp, bool sRgb);
 
-    void loadResources();
-    void draw();
-
-private:
-    struct Impl;
-    std::shared_ptr<Impl> impl;
-};
-
+} // namespace opengl_texture_loader
 } // namespace sunne
 } // namespace kuu

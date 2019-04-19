@@ -24,6 +24,8 @@ struct Controller::Impl
     Impl(Controller* self)
         : self(self)
         , closeApp(false)
+        , resourceLoadStart(true)
+        , resourceLoad(false)
     {}
 
     /* ------------------------------------------------------------ *
@@ -63,9 +65,23 @@ struct Controller::Impl
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
+    void loadResources()
+    {
+        renderer->loadResources(*scene);
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
     void render()
     {
-        renderer->render(*scene);
+        if (resourceLoad)
+        {
+            renderer->renderResourceLoadWait();
+        }
+        else
+        {
+            renderer->render(*scene);
+        }
     }
 
     /* ------------------------------------------------------------ *
@@ -75,6 +91,8 @@ struct Controller::Impl
     std::shared_ptr<Renderer> renderer;
     std::shared_ptr<RendererScene> scene;
     bool closeApp;
+    bool resourceLoadStart;
+    bool resourceLoad;
 };
 
 /* ---------------------------------------------------------------- *
@@ -128,6 +146,30 @@ void Controller::setUserInput(const WindowUserInput& i)
 {
     if (i.key.key == GLFW_KEY_ESCAPE)
         impl->closeApp = true;
+}
+
+/* ---------------------------------------------------------------- *
+ * ---------------------------------------------------------------- */
+bool Controller::startAsync()
+{
+    if (impl->resourceLoadStart)
+    {
+        impl->resourceLoadStart = false;
+        impl->resourceLoad = true;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+/* ---------------------------------------------------------------- *
+ * ---------------------------------------------------------------- */
+void Controller::runAsync()
+{
+    impl->loadResources();
+    impl->resourceLoad = false;
 }
 
 } // namespace sunne

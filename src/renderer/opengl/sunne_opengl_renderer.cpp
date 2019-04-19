@@ -8,6 +8,7 @@
 #include "../sunne_renderer_scene.h"
 #include "sunne_opengl_atmosphere_effect_render.h"
 #include "sunne_opengl_compose.h"
+#include "sunne_opengl_loading.h"
 #include "sunne_opengl_resources.h"
 #include "sunne_opengl_shading_render.h"
 #include "sunne_opengl_star_effect_render.h"
@@ -25,12 +26,14 @@ struct OpenGLRenderer::Impl
      * ------------------------------------------------------------ */
     Impl(const glm::ivec2& size)
         : size(size)
-        , resources(std::make_shared<OpenGLResources>())
-        , shading(std::make_shared<OpenGLShadingRender>(size, resources))
-        , atmosphereEffect(std::make_shared<OpenGLAtmosphereEffectRender>(size))
-        , starEffect(std::make_shared<OpenGLStarEffectRender>(size))
-        , compose(std::make_shared<OpenGLCompose>())
-    {}
+    {
+        resources        = std::make_shared<OpenGLResources>();
+        loading          = std::make_shared<OpenGLLoading>();
+        shading          = std::make_shared<OpenGLShadingRender>(size, resources);
+        atmosphereEffect = std::make_shared<OpenGLAtmosphereEffectRender>(size);
+        starEffect       = std::make_shared<OpenGLStarEffectRender>(size);
+        compose          = std::make_shared<OpenGLCompose>();
+    }
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
@@ -44,13 +47,20 @@ struct OpenGLRenderer::Impl
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
+    void loadResources(const RendererScene& scene)
+    {
+        shading->load(scene);
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
     void render(const RendererScene& scene)
     {
         shading->draw(scene);
         atmosphereEffect->draw(scene);
         starEffect->draw();
         glEnable(GL_DEPTH_TEST);
-        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+        glClearColor(1.0f, 0.2f, 0.2f, 1.0f);
         glViewport(0, 0, size.x, size.y);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         compose->shadingTexMap    = shading->tex;
@@ -61,8 +71,19 @@ struct OpenGLRenderer::Impl
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
+    void renderResourceLoadWait()
+    {
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glViewport(0, 0, size.x, size.y);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        loading->draw();
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
     glm::ivec2 size;
     std::shared_ptr<OpenGLResources> resources;
+    std::shared_ptr<OpenGLLoading> loading;
     std::shared_ptr<OpenGLShadingRender> shading;
     std::shared_ptr<OpenGLAtmosphereEffectRender> atmosphereEffect;
     std::shared_ptr<OpenGLStarEffectRender> starEffect;
@@ -84,6 +105,20 @@ void OpenGLRenderer::resize(const glm::ivec2& size)
  * ---------------------------------------------------------------- */
 void OpenGLRenderer::render(const RendererScene& scene)
 { impl->render(scene); }
+
+/* ---------------------------------------------------------------- *
+ * ---------------------------------------------------------------- */
+void OpenGLRenderer::loadResources(const RendererScene& scene)
+{
+    impl->loadResources(scene);
+}
+
+/* ---------------------------------------------------------------- *
+ * ---------------------------------------------------------------- */
+void OpenGLRenderer::renderResourceLoadWait()
+{
+    impl->renderResourceLoadWait();
+}
 
 } // namespace sunne
 } // namespace kuu

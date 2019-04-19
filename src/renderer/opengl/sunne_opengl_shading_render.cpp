@@ -145,7 +145,6 @@ struct OpenGLShadingRender::Impl
     void createMesh()
     {
         ndcQuad = std::make_shared<NdcQuadMesh>();
-        sphere  = std::make_shared<OpenGLSphere>(1.0f);
     }
 
     /* ------------------------------------------------------------ *
@@ -215,8 +214,6 @@ struct OpenGLShadingRender::Impl
             glPlanet->draw();
 
         }
-
-        //sphere->draw();
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }

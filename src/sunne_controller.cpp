@@ -147,7 +147,7 @@ void Controller::update(double elapsed)
     if (impl->resourceLoad)
         return;
 
-    //impl->cameraOrbit->update(float(elapsed));
+    impl->cameraOrbit->update(float(elapsed));
 }
 
 /* ---------------------------------------------------------------- *

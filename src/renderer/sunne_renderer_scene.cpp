@@ -16,8 +16,9 @@ namespace sunne
 glm::mat4 RendererScene::Camera::viewMatrix() const
 {
     glm::mat4 view(1.0f);
-    view = glm::translate(view, position);
     view *= glm::mat4_cast(rotation);
+    view = glm::translate(view, position);
+    view *= glm::mat4_cast(glm::angleAxis(float(M_PI/3), glm::vec3(1.0f, 0.0f, 0.0f)));
     return glm::inverse(view);
 }
 
@@ -60,7 +61,7 @@ RendererScene::RendererScene()
 
     // Camera
     const double atmosphereRadius = 6420;
-    const double distance = atmosphereRadius * 3;
+    const double distance = atmosphereRadius * 1.1;
 
     camera.position = glm::vec3(0.0f, 0.0f, distance);
     camera.farPlane = distance * 2;

@@ -206,11 +206,11 @@ struct OpenGLPlanet::Impl
      * ------------------------------------------------------------ */
     void createTextures()
     {
+        texNight    = opengl_texture_loader::load(planet.nightMap,    4, true);
+        texCloud    = opengl_texture_loader::load(planet.cloudMap,    4, false);
         texAlbedo   = opengl_texture_loader::load(planet.albedoMap,   3, true);
         texNormal   = opengl_texture_loader::load(planet.normalMap,   3, false);
         texSpecular = opengl_texture_loader::load(planet.specularMap, 4, false);
-        texCloud    = opengl_texture_loader::load(planet.cloudMap,    4, false);
-        texNight    = opengl_texture_loader::load(planet.nightMap,    4, true);
     }
 
     /* ------------------------------------------------------------ *

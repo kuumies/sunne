@@ -45,6 +45,9 @@ struct Controller::Impl
         params.vSync        = true;
         params.title        = "Sunne";
         params.callback     = self;
+        params.fullscreen   = false;
+        params.size.x       = 960;
+        params.size.y       = 540;
 
         window = std::make_shared<OpenGLWindow>(params);
     }
@@ -60,6 +63,7 @@ struct Controller::Impl
      * ------------------------------------------------------------ */
     void resize(const glm::ivec2& size)
     {
+        scene->camera.aspectRatio = size.x / float(size.y);
         renderer->resize(size);
     }
 
@@ -117,6 +121,7 @@ void Controller::run()
 void Controller::initialize(const glm::ivec2& size,
                             GLFWwindow* /*window*/)
 {
+    impl->scene->camera.aspectRatio = size.x / float(size.y);
     impl->createRenderer(size);
 }
 

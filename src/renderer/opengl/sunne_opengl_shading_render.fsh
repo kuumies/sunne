@@ -48,14 +48,14 @@ void main()
     float vDotR = max(dot(v, r), 0.0);
 
     vec3 albedo = vec3(0.0);
-    //if (nDotL > 0)
+    if (nDotL > 0)
     {
         albedo = texture(albedoMap, tc).rgb;
         vec4 clouds = texture(cloudMap,  vsOut.texCoord);
         albedo = mix(albedo, clouds.rgb, clouds.a) * nDotL;
     }
-    //else
-    //    albedo = texture(nightMap,  tc).rgb;
+    else
+        albedo = texture(nightMap, tc).rgb;
 
     vec3 diffuse  = albedo /** nDotL*/;
     vec3 specular = vec3(texture(specularMap, tc).r) * pow(vDotR, 128.0);

@@ -132,7 +132,7 @@ struct OpenGLAtmosphereEffectRender::Impl
      * ------------------------------------------------------------ */
     void createMesh()
     {
-        ndcQuad = std::make_shared<NdcQuadMesh>();
+        ndcQuad = std::make_shared<NdcQuadMesh>(true);
     }
 
     /* ------------------------------------------------------------ *

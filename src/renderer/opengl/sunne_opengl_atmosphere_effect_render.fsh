@@ -8,7 +8,7 @@
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
 const float PI                     = 3.14159f;
-const vec3 lightDir                = normalize(-vec3(1.0, -1.0, 1.0));
+const vec3 lightDir                = normalize(vec3(1.0, 1.0, 1.0));
 const vec3 lightIntensity          = vec3(10.0, 10.0, 10.0);
 const int viewRaySampleCount       = 8;
 const int lightRaySampleCount      = 4;
@@ -62,7 +62,7 @@ Ray fragmentRay(vec2 fragmentPos,
 {
     // [vp] -> [0, 1], note that y is flipped
     vec2 fragCoord = fragmentPos.xy / viewport.xy;
-    fragCoord.y = 1.0 - fragCoord.y;
+    //fragCoord.y = 1.0 - fragCoord.y;
 
     // [0, 1] -> [-1, 1] (NDC)
     fragCoord = (fragCoord - 0.5) * 2.0;
@@ -167,7 +167,7 @@ void main()
     // ---------------------------------------------------------------
     // Light direction is *towards* the light in *world space*.
 
-    vec3 lightDirection = -lightDir;
+    vec3 lightDirection = lightDir;
 
     // ---------------------------------------------------------------
     // Calculate the view ray in *world space* at this texel.

@@ -9,6 +9,7 @@
 #include "window/sunne_opengl_window.h"
 #include "window/sunne_window_parameters.h"
 #include "window/sunne_window_user_input.h"
+#include "sunne_camera_orbit.h"
 
 namespace kuu
 {
@@ -61,6 +62,13 @@ struct Controller::Impl
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
+    void createCameraOrbit()
+    {
+        cameraOrbit = std::make_shared<CameraOrbit>(&scene->camera);
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
     void resize(const glm::ivec2& size)
     {
         scene->camera.aspectRatio = size.x / float(size.y);
@@ -91,6 +99,7 @@ struct Controller::Impl
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
     Controller* self;
+    std::shared_ptr<CameraOrbit> cameraOrbit;
     std::shared_ptr<Window> window;
     std::shared_ptr<Renderer> renderer;
     std::shared_ptr<RendererScene> scene;
@@ -113,6 +122,7 @@ void Controller::run()
         return;
     impl->createScene();
     impl->createWindow();
+    impl->createCameraOrbit();
     impl->window->run();
 }
 
@@ -132,8 +142,13 @@ void Controller::resize(const glm::ivec2& size)
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-void Controller::update(double /*elapsed*/)
-{}
+void Controller::update(double elapsed)
+{
+    if (impl->resourceLoad)
+        return;
+
+    //impl->cameraOrbit->update(float(elapsed));
+}
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */

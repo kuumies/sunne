@@ -60,6 +60,14 @@ include_directories(external/glad/include)
 include_directories(external/stb)
 
 #---------------------------------------------------------------------
+# assimp
+
+set(BUILD_SHARED_LIBS OFF CACHE STRING "" FORCE)
+set(ASSIMP_INSTALL_PDB OFF CACHE STRING "" FORCE)
+add_subdirectory(external/assimp)
+include_directories(external/assimp/code)
+
+#---------------------------------------------------------------------
 # Sources
 
 file(GLOB_RECURSE GLSL_SOURCES
@@ -89,9 +97,11 @@ target_link_libraries(
     ${PROJECT_NAME}
     ${CMAKE_CURRENT_BINARY_DIR}/external/glfw/src/glfw3.lib
     ${CMAKE_CURRENT_BINARY_DIR}/external/glad/gladlib.lib
+    ${CMAKE_CURRENT_BINARY_DIR}/external/assimp/code/assimp-vc140-mtd.lib
 )
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
 
-install(FILES ${GLSL_SOURCES}    DESTINATION bin/shaders)
-install(FILES ${TEXTURE_SOURCES} DESTINATION bin/textures)
+install(FILES ${GLSL_SOURCES}        DESTINATION bin/shaders)
+install(FILES ${TEXTURE_SOURCES}     DESTINATION bin/textures)
+install(DIRECTORY "model/satellite"  DESTINATION bin/models)

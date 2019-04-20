@@ -10,6 +10,7 @@
 #include "window/sunne_window_parameters.h"
 #include "window/sunne_window_user_input.h"
 #include "sunne_camera_orbit.h"
+#include "sunne_satellite_orbit.h"
 
 namespace kuu
 {
@@ -64,14 +65,22 @@ struct Controller::Impl
      * ------------------------------------------------------------ */
     void createCameraOrbit()
     {
-        cameraOrbit = std::make_shared<CameraOrbit>(&scene->camera);
+        cameraOrbit = std::make_shared<CameraOrbit>(scene->camera);
     }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    void createSatelliteOrbit()
+    {
+        satelliteOrbit = std::make_shared<SatelliteOrbit>(scene->satellite);
+    }
+
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
     void resize(const glm::ivec2& size)
     {
-        scene->camera.aspectRatio = size.x / float(size.y);
+        scene->camera->aspectRatio = size.x / float(size.y);
         renderer->resize(size);
     }
 
@@ -79,7 +88,7 @@ struct Controller::Impl
      * ------------------------------------------------------------ */
     void loadResources()
     {
-        renderer->loadResources(*scene);
+        renderer->loadResources(scene);
     }
 
     /* ------------------------------------------------------------ *
@@ -92,7 +101,7 @@ struct Controller::Impl
         }
         else
         {
-            renderer->render(*scene);
+            renderer->render(scene);
         }
     }
 
@@ -100,6 +109,7 @@ struct Controller::Impl
      * ------------------------------------------------------------ */
     Controller* self;
     std::shared_ptr<CameraOrbit> cameraOrbit;
+    std::shared_ptr<SatelliteOrbit> satelliteOrbit;
     std::shared_ptr<Window> window;
     std::shared_ptr<Renderer> renderer;
     std::shared_ptr<RendererScene> scene;
@@ -123,6 +133,7 @@ void Controller::run()
     impl->createScene();
     impl->createWindow();
     impl->createCameraOrbit();
+    impl->createSatelliteOrbit();
     impl->window->run();
 }
 
@@ -131,7 +142,7 @@ void Controller::run()
 void Controller::initialize(const glm::ivec2& size,
                             GLFWwindow* /*window*/)
 {
-    impl->scene->camera.aspectRatio = size.x / float(size.y);
+    impl->scene->camera->aspectRatio = size.x / float(size.y);
     impl->createRenderer(size);
 }
 
@@ -147,7 +158,8 @@ void Controller::update(double elapsed)
     if (impl->resourceLoad)
         return;
 
-    impl->cameraOrbit->update(float(elapsed));
+    //impl->cameraOrbit->update(float(elapsed));
+    //impl->satelliteOrbit->update(float(elapsed));
 }
 
 /* ---------------------------------------------------------------- *

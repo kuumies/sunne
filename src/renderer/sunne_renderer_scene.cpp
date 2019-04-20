@@ -35,36 +35,53 @@ glm::mat4 RendererScene::Camera::projectionMatrix() const
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
+glm::mat4 RendererScene::Satellite::matrix() const
+{
+    glm::mat4 r = glm::mat4_cast(rotation);
+    glm::mat4 t = glm::translate(glm::mat4(1.0f), position);
+    glm::mat4 s = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
+    return r * t * s;
+}
+
+/* ---------------------------------------------------------------- *
+ * ---------------------------------------------------------------- */
 RendererScene::RendererScene()
 {
     // Create sun
-    Star sun;
-    sun.id     = "sun";
-    sun.radius = 696342;
+    std::shared_ptr<Star> sun = std::make_shared<Star>();
+    sun->id     = "sun";
+    sun->radius = 696342;
     stars.push_back(sun);
 
     // Create earth
-    Planet earth;
-    earth.id          = "earth";
-    earth.distance    = 150000000;
-    earth.radius      = 6371.0f;
-    earth.inclination = 7.155f;
+    std::shared_ptr<Planet> earth = std::make_shared<Planet>();
+    earth->id          = "earth";
+    earth->distance    = 150000000;
+    earth->radius      = 6371.0f;
+    earth->inclination = 7.155f;
     //earth.albedoMap   = "textures/earth_albedo_day.png";
     //earth.normalMap   = "textures/earth_normal.png";
     //earth.specularMap = "textures/earth_specular.png";
-    earth.albedoMap   = "textures/highres_earth_diffuse.png";
-    earth.normalMap   = "textures/highres_earth_normal.png";
-    earth.specularMap = "textures/highres_earth_spec.png";
-    earth.cloudMap    = "textures/highres_earth_clouds.png";
-    earth.nightMap    = "textures/highres_earth_night.png";
+    earth->albedoMap   = "textures/highres_earth_diffuse.png";
+    earth->normalMap   = "textures/highres_earth_normal.png";
+    earth->specularMap = "textures/highres_earth_spec.png";
+    earth->cloudMap    = "textures/highres_earth_clouds.png";
+    earth->nightMap    = "textures/highres_earth_night.png";
     planets.push_back(earth);
 
     // Camera
     const double atmosphereRadius = 6420;
     const double distance = atmosphereRadius * 1.1;
+    camera = std::make_shared<Camera>();
+    camera->position = glm::vec3(0.0f, 0.0f, distance);
+    //camera.position = glm::vec3(0.0f, 0.0f, 10.0f);
+    camera->farPlane = distance * 3;
+    std::cout << distance << std::endl;
 
-    camera.position = glm::vec3(0.0f, 0.0f, distance);
-    camera.farPlane = distance * 2;
+    // Satellite
+    satellite = std::make_shared<Satellite>();
+    satellite->position.z = 9600;
+    //satellite->rotation = glm::angleAxis(glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 } // namespace sunne

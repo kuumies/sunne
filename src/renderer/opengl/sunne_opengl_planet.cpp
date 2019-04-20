@@ -7,10 +7,14 @@
 #include <iostream>
 #include <math.h>
 #include <vector>
+#include <glm/gtc/matrix_inverse.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <glm/geometric.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glad/glad.h>
+#include "sunne_opengl_shader_loader.h"
 #include "sunne_opengl_texture_loader.h"
 
 namespace kuu
@@ -30,12 +34,13 @@ struct OpenGLPlanet::Impl
 {
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
-    Impl(const RendererScene::Planet& planet)
+    Impl(const std::shared_ptr<RendererScene::Planet> planet)
         : planet(planet)
     {
         //createMeshBuffers();
         //createMeshVao();
         //createTextures();
+        createShader();
     }
 
     /* ------------------------------------------------------------ *
@@ -85,11 +90,11 @@ struct OpenGLPlanet::Impl
             vec3 bitangent;
         };
 
-        const int ringCount   = 32;
-        const int sectorCount = 32;
+        const int ringCount   = 128;
+        const int sectorCount = 128;
         const float pi        = float(M_PI);
         const float half_pi   = pi * 0.5f;
-        const float radius    = planet.radius;
+        const float radius    = planet->radius;
 
         const float ringStep   = 1.0f / float(ringCount   - 1);
         const float sectorStep = 1.0f / float(sectorCount - 1);
@@ -206,11 +211,36 @@ struct OpenGLPlanet::Impl
      * ------------------------------------------------------------ */
     void createTextures()
     {
-        texNight    = opengl_texture_loader::load(planet.nightMap,    4, true);
-        texCloud    = opengl_texture_loader::load(planet.cloudMap,    4, false);
-        texAlbedo   = opengl_texture_loader::load(planet.albedoMap,   3, true);
-        texNormal   = opengl_texture_loader::load(planet.normalMap,   3, false);
-        texSpecular = opengl_texture_loader::load(planet.specularMap, 4, false);
+        texNight    = opengl_texture_loader::load(planet->nightMap,    4, true);
+        texCloud    = opengl_texture_loader::load(planet->cloudMap,    4, false);
+        texAlbedo   = opengl_texture_loader::load(planet->albedoMap,   3, true);
+        texNormal   = opengl_texture_loader::load(planet->normalMap,   3, false);
+        texSpecular = opengl_texture_loader::load(planet->specularMap, 4, false);
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    void createShader()
+    {
+        pgm = opengl_shader_loader::load(
+                "shaders/sunne_opengl_planet.vsh",
+                "shaders/sunne_opengl_planet.fsh");
+        uniformProjectionMatrix = glGetUniformLocation(pgm, "matrices.projection");
+        uniformViewMatrix       = glGetUniformLocation(pgm, "matrices.view");
+        uniformModelMatrix      = glGetUniformLocation(pgm, "matrices.model");
+        uniformNormalMatrix     = glGetUniformLocation(pgm, "matrices.normal");
+        uniformAlbedoMap        = glGetUniformLocation(pgm, "albedoMap");
+        uniformNormalMap        = glGetUniformLocation(pgm, "normalMap");
+        uniformSpecularMap      = glGetUniformLocation(pgm, "specularMap");
+        uniformCloudMap         = glGetUniformLocation(pgm, "cloudMap");
+        uniformNightMap         = glGetUniformLocation(pgm, "nightMap");
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    void destroyShader()
+    {
+        glDeleteProgram(pgm);
     }
 
     /* ------------------------------------------------------------ *
@@ -220,6 +250,7 @@ struct OpenGLPlanet::Impl
         glDeleteVertexArrays(1, &vao);
         glDeleteBuffers(1, &vbo);
         glDeleteBuffers(1, &ibo);
+        destroyShader();
     }
 
     /* ------------------------------------------------------------ *
@@ -231,7 +262,7 @@ struct OpenGLPlanet::Impl
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
-    void draw()
+    void draw(const mat4& viewMatrix, const mat4& projectionMatrix)
     {
         if (vao == 0)
         {
@@ -250,6 +281,24 @@ struct OpenGLPlanet::Impl
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, texNight);
 
+        const glm::mat4 modelMatrix  = glm::mat4(1.0f);
+        const glm::mat3 normalMatrix = glm::mat3(glm::inverseTranspose(modelMatrix));
+
+        glUseProgram(pgm);
+        glUniformMatrix4fv(uniformModelMatrix, 1,
+                           GL_FALSE, glm::value_ptr(modelMatrix));
+        glUniformMatrix4fv(uniformViewMatrix, 1,
+                           GL_FALSE, glm::value_ptr(viewMatrix));
+        glUniformMatrix4fv(uniformProjectionMatrix, 1,
+                           GL_FALSE, glm::value_ptr(projectionMatrix));
+        glUniformMatrix3fv(uniformNormalMatrix, 1,
+                           GL_FALSE, glm::value_ptr(normalMatrix));
+        glUniform1i(uniformAlbedoMap,   0);
+        glUniform1i(uniformNormalMap,   1);
+        glUniform1i(uniformSpecularMap, 2);
+        glUniform1i(uniformCloudMap,    3);
+        glUniform1i(uniformNightMap,    4);
+
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
         glBindVertexArray(0);
@@ -257,7 +306,7 @@ struct OpenGLPlanet::Impl
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
-    const RendererScene::Planet planet;
+    std::shared_ptr<RendererScene::Planet> planet;
     GLuint vao = 0;
     GLuint vbo;
     GLuint ibo;
@@ -267,11 +316,21 @@ struct OpenGLPlanet::Impl
     GLuint texSpecular;
     GLuint texCloud;
     GLuint texNight;
+    GLuint pgm = 0;
+    GLint uniformProjectionMatrix;
+    GLint uniformViewMatrix;
+    GLint uniformModelMatrix;
+    GLint uniformNormalMatrix;
+    GLint uniformAlbedoMap;
+    GLint uniformNormalMap;
+    GLint uniformSpecularMap;
+    GLint uniformCloudMap;
+    GLint uniformNightMap;
 };
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-OpenGLPlanet::OpenGLPlanet(const RendererScene::Planet& planet)
+OpenGLPlanet::OpenGLPlanet(std::shared_ptr<RendererScene::Planet> planet)
     : impl(std::make_shared<Impl>(planet))
 {}
 
@@ -282,8 +341,8 @@ void OpenGLPlanet::loadResources()
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-void OpenGLPlanet::draw()
-{ impl->draw(); }
+void OpenGLPlanet::draw(const mat4& view, const mat4& projection)
+{ impl->draw(view, projection); }
 
 } // namespace sunne
 } // namespace kuu

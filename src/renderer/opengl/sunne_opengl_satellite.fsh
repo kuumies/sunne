@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------- *
    Antti Jumpponen <kuumies@gmail.com>
-   kuu::OpenGLShadingRender fragment shader.
+   kuu::OpenGLSatellite fragment shader.
  * ---------------------------------------------------------------- */
  
 #version 330 core
@@ -34,10 +34,10 @@ out vec4 outColor;
 void main()
 {
     vec3 n = normalize(vsOut.worldNormal);
-    n = texture(normalMap, vsOut.texCoord).rgb;
-    n = normalize(n * 2.0 - 1.0);
-    n = vsOut.tbn * n;
-    n = normalize(n);
+//    n = texture(normalMap, vsOut.texCoord).rgb;
+//    n = normalize(n * 2.0 - 1.0);
+//    n = vsOut.tbn * n;
+//    n = normalize(n);
 
     vec3 v = normalize(-vsOut.cameraPos);
     vec3 l = normalize(vec3(1, 1, 1));
@@ -47,18 +47,9 @@ void main()
     float nDotL = max(dot(l, n), 0.0);
     float vDotR = max(dot(v, r), 0.0);
 
-    vec3 albedo = vec3(0.0);
-    if (nDotL > 0)
-    {
-        albedo = texture(albedoMap, tc).rgb;
-        vec4 clouds = texture(cloudMap,  vsOut.texCoord);
-        albedo = mix(albedo, clouds.rgb, clouds.a) * nDotL;
-    }
-    else
-        albedo = texture(nightMap, tc).rgb;
+    vec3 albedo = texture(albedoMap, tc).rgb;
+    vec3 diffuse  = albedo * nDotL;
+    vec3 specular = vec3(1.0) * pow(vDotR, 128.0);
 
-    vec3 diffuse  = albedo /** nDotL*/;
-    vec3 specular = vec3(texture(specularMap, tc).r) * pow(vDotR, 128.0);
-
-    outColor = vec4(diffuse, 1.0);
+    outColor = vec4(diffuse + specular, 1.0);
 }

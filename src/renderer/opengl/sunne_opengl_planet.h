@@ -18,10 +18,11 @@ namespace sunne
 class OpenGLPlanet
 {
 public:
-    OpenGLPlanet(const RendererScene::Planet& planet);
+    OpenGLPlanet(std::shared_ptr<RendererScene::Planet> planet);
 
     void loadResources();
-    void draw();
+    void draw(const glm::mat4& view,
+              const glm::mat4& projection);
 
 private:
     struct Impl;

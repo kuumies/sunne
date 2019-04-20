@@ -7,6 +7,7 @@
 #include <map>
 #include <glad/glad.h>
 #include "sunne_opengl_planet.h"
+#include "sunne_opengl_satellite.h"
 
 namespace kuu
 {
@@ -18,6 +19,7 @@ namespace sunne
 struct OpenGLResources::Impl
 {
     std::map<std::string, std::shared_ptr<OpenGLPlanet>> planets;
+    std::shared_ptr<OpenGLSatellite> satellite;
 };
 
 /* ---------------------------------------------------------------- *
@@ -29,15 +31,25 @@ OpenGLResources::OpenGLResources()
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
 std::shared_ptr<OpenGLPlanet> OpenGLResources::openglPlanet(
-    const RendererScene::Planet& planet)
+    std::shared_ptr<RendererScene::Planet> planet)
 {
-    std::shared_ptr<OpenGLPlanet> out = impl->planets[planet.id];
+    std::shared_ptr<OpenGLPlanet> out = impl->planets[planet->id];
     if (!out)
     {
         out = std::make_shared<OpenGLPlanet>(planet);
-        impl->planets[planet.id] = out;
+        impl->planets[planet->id] = out;
     }
     return out;
+}
+
+std::shared_ptr<OpenGLSatellite> OpenGLResources::openglSatellite(std::shared_ptr<RendererScene::Satellite> satellite)
+{
+    if (!impl->satellite)
+    {
+        impl->satellite = std::make_shared<OpenGLSatellite>(satellite);
+        impl->satellite->loadResources();
+    }
+    return impl->satellite;
 }
 
 } // namespace sunne

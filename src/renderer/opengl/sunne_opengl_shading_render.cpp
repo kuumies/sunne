@@ -4,14 +4,9 @@
  * ---------------------------------------------------------------- */
  
 #include "sunne_opengl_shading_render.h"
-#include <glm/gtc/matrix_inverse.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include "sunne_opengl_ndc_mesh.h"
 #include "sunne_opengl_planet.h"
 #include "sunne_opengl_resources.h"
-#include "sunne_opengl_shader_loader.h"
-#include "sunne_opengl_sphere.h"
+#include "sunne_opengl_satellite.h"
 #include "../sunne_renderer_scene.h"
 
 namespace kuu
@@ -35,16 +30,12 @@ struct OpenGLShadingRender::Impl
         createTexture();
         createRenderbuffer();
         createFramebuffer();
-        createShader();
-        createMesh();
     }
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
     ~Impl()
     {
-        destroyMesh();
-        destroyShader();
         destroyFramebuffer();
         destroyRenderbuffer();
         destroyTexture();
@@ -117,46 +108,6 @@ struct OpenGLShadingRender::Impl
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
-    void createShader()
-    {
-        pgm = opengl_shader_loader::load(
-                "shaders/sunne_opengl_shading_render.vsh",
-                "shaders/sunne_opengl_shading_render.fsh");
-        uniformProjectionMatrix = glGetUniformLocation(pgm, "matrices.projection");
-        uniformViewMatrix       = glGetUniformLocation(pgm, "matrices.view");
-        uniformModelMatrix      = glGetUniformLocation(pgm, "matrices.model");
-        uniformNormalMatrix     = glGetUniformLocation(pgm, "matrices.normal");
-        uniformAlbedoMap        = glGetUniformLocation(pgm, "albedoMap");
-        uniformNormalMap        = glGetUniformLocation(pgm, "normalMap");
-        uniformSpecularMap      = glGetUniformLocation(pgm, "specularMap");
-        uniformCloudMap         = glGetUniformLocation(pgm, "cloudMap");
-        uniformNightMap         = glGetUniformLocation(pgm, "nightMap");
-    }
-
-    /* ------------------------------------------------------------ *
-     * ------------------------------------------------------------ */
-    void destroyShader()
-    {
-        glDeleteProgram(pgm);
-    }
-
-    /* ------------------------------------------------------------ *
-     * ------------------------------------------------------------ */
-    void createMesh()
-    {
-        ndcQuad = std::make_shared<NdcQuadMesh>();
-    }
-
-    /* ------------------------------------------------------------ *
-     * ------------------------------------------------------------ */
-    void destroyMesh()
-    {
-        sphere.reset();
-        ndcQuad.reset();
-    }
-
-    /* ------------------------------------------------------------ *
-     * ------------------------------------------------------------ */
     void resize(const glm::ivec2& newSize)
     {
         size = newSize;
@@ -172,20 +123,19 @@ struct OpenGLShadingRender::Impl
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
-    void load(const RendererScene& scene)
+    void load(std::shared_ptr<RendererScene> scene)
     {
-        for (const RendererScene::Planet& planet : scene.planets)
+        for (std::shared_ptr<RendererScene::Planet> planet : scene->planets)
             resources->openglPlanet(planet)->loadResources();
+        //resources->openglSatellite()->loadResources();
     }
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
-    void draw(const RendererScene& scene)
+    void draw(std::shared_ptr<RendererScene> scene)
     {
-        const glm::mat4 projectionMatrix = scene.camera.projectionMatrix();
-        const glm::mat4 viewMatrix       = scene.camera.viewMatrix();
-        const glm::mat4 modelMatrix      = glm::mat4(1.0f);
-        const glm::mat3 normalMatrix     = glm::mat3(glm::inverseTranspose(modelMatrix));
+        const glm::mat4 view       = scene->camera->viewMatrix();
+        const glm::mat4 projection = scene->camera->projectionMatrix();
 
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
@@ -193,27 +143,9 @@ struct OpenGLShadingRender::Impl
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(pgm);
-        glUniformMatrix4fv(uniformModelMatrix, 1,
-                           GL_FALSE, glm::value_ptr(modelMatrix));
-        glUniformMatrix4fv(uniformViewMatrix, 1,
-                           GL_FALSE, glm::value_ptr(viewMatrix));
-        glUniformMatrix4fv(uniformProjectionMatrix, 1,
-                           GL_FALSE, glm::value_ptr(projectionMatrix));
-        glUniformMatrix3fv(uniformNormalMatrix, 1,
-                           GL_FALSE, glm::value_ptr(normalMatrix));
-        glUniform1i(uniformAlbedoMap,   0);
-        glUniform1i(uniformNormalMap,   1);
-        glUniform1i(uniformSpecularMap, 2);
-        glUniform1i(uniformCloudMap,    3);
-        glUniform1i(uniformNightMap,    4);
-
-        for (const RendererScene::Planet& planet : scene.planets)
-        {
-            std::shared_ptr<OpenGLPlanet> glPlanet = resources->openglPlanet(planet);
-            glPlanet->draw();
-
-        }
+        for (std::shared_ptr<RendererScene::Planet> planet : scene->planets)
+            resources->openglPlanet(planet)->draw(view, projection);
+        resources->openglSatellite(scene->satellite)->draw(view, projection);
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
@@ -224,18 +156,6 @@ struct OpenGLShadingRender::Impl
     OpenGLShadingRender* self;
     GLuint rbo = 0;
     GLuint fbo = 0;
-    GLuint pgm = 0;
-    GLint uniformProjectionMatrix;
-    GLint uniformViewMatrix;
-    GLint uniformModelMatrix;
-    GLint uniformNormalMatrix;
-    GLint uniformAlbedoMap;
-    GLint uniformNormalMap;
-    GLint uniformSpecularMap;
-    GLint uniformCloudMap;
-    GLint uniformNightMap;
-    std::shared_ptr<NdcQuadMesh> ndcQuad;
-    std::shared_ptr<OpenGLSphere> sphere;
     std::shared_ptr<OpenGLResources> resources;
 };
 
@@ -253,10 +173,10 @@ void OpenGLShadingRender::resize(const glm::ivec2& size)
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-void OpenGLShadingRender::load(const RendererScene &scene)
+void OpenGLShadingRender::load(std::shared_ptr<RendererScene> scene)
 { impl->load(scene); }
 
-void OpenGLShadingRender::draw(const RendererScene& scene)
+void OpenGLShadingRender::draw(std::shared_ptr<RendererScene> scene)
 { impl->draw(scene); }
 
 } // namespace sunne

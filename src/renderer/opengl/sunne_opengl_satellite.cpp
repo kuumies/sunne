@@ -7,11 +7,16 @@
 #include <iostream>
 #include <math.h>
 #include <vector>
+#include <glm/gtc/matrix_inverse.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <glm/geometric.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glad/glad.h>
+#include "sunne_opengl_shader_loader.h"
 #include "sunne_opengl_texture_loader.h"
+#include "../sunne_pbr_model_importer.h"
 
 namespace kuu
 {
@@ -30,21 +35,102 @@ struct OpenGLSatellite::Impl
 {
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
-    Impl()
+    struct Mesh
     {
-        //createMeshBuffers();
-        //createMeshVao();
-        //createTextures();
+        ModelImporter::Model model;
+        GLuint vao = 0;
+        GLuint vbo;
+        GLuint ibo;
+        GLsizei indexCount;
+        GLuint texAlbedo;
+        GLuint texNormal;
+        GLuint texSpecular;
+        GLuint texCloud;
+        GLuint texNight;
+    };
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    Impl(std::shared_ptr<RendererScene::Satellite> satellite)
+        : satellite(satellite)
+    {
+        createShader();
     }
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
-    void createMeshVao()
+    void createShader()
     {
-        glGenVertexArrays(1, &vao);
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+        pgm = opengl_shader_loader::load(
+                "shaders/sunne_opengl_satellite.vsh",
+                "shaders/sunne_opengl_satellite.fsh");
+        uniformProjectionMatrix = glGetUniformLocation(pgm, "matrices.projection");
+        uniformViewMatrix       = glGetUniformLocation(pgm, "matrices.view");
+        uniformModelMatrix      = glGetUniformLocation(pgm, "matrices.model");
+        uniformNormalMatrix     = glGetUniformLocation(pgm, "matrices.normal");
+        uniformAlbedoMap        = glGetUniformLocation(pgm, "albedoMap");
+        uniformNormalMap        = glGetUniformLocation(pgm, "normalMap");
+        uniformSpecularMap      = glGetUniformLocation(pgm, "specularMap");
+        uniformCloudMap         = glGetUniformLocation(pgm, "cloudMap");
+        uniformNightMap         = glGetUniformLocation(pgm, "nightMap");
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    void destroyShader()
+    {
+        glDeleteProgram(pgm);
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    void createMesh(Mesh& mesh)
+    {
+        std::vector<unsigned int> indexData = mesh.model.mesh->indices;
+        mesh.indexCount = GLsizei(indexData.size());
+
+        std::vector<float> vertexData;
+        for (const ModelImporter::Vertex& v : mesh.model.mesh->vertices)
+        {
+            vertexData.push_back(v.position.x);
+            vertexData.push_back(v.position.y);
+            vertexData.push_back(v.position.z);
+            vertexData.push_back(v.texCoord.x);
+            vertexData.push_back(v.texCoord.y);
+            vertexData.push_back(v.normal.x);
+            vertexData.push_back(v.normal.y);
+            vertexData.push_back(v.normal.z);
+            vertexData.push_back(v.tangent.x);
+            vertexData.push_back(v.tangent.y);
+            vertexData.push_back(v.tangent.z);
+            vertexData.push_back(v.bitangent.x);
+            vertexData.push_back(v.bitangent.y);
+            vertexData.push_back(v.bitangent.z);
+        }
+
+        glGenBuffers(1, &mesh.vbo);
+        glGenBuffers(1, &mesh.ibo);
+
+        std::cout << vertexData.size() << ", " << indexData.size() << std::endl;
+
+        glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
+        glBufferData(GL_ARRAY_BUFFER,
+                     GLsizeiptr(vertexData.size() * sizeof(float)),
+                     vertexData.data(),
+                     GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                     GLsizeiptr(indexData.size() * sizeof(unsigned int)),
+                     indexData.data(),
+                     GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+        glGenVertexArrays(1, &mesh.vao);
+        glBindVertexArray(mesh.vao);
+        glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo);
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         glEnableVertexAttribArray(2);
@@ -73,141 +159,33 @@ struct OpenGLSatellite::Impl
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
-    void createMeshBuffers()
+    void loadModel()
     {
-        struct Vertex
+        meshes.clear();
+        std::vector<ModelImporter::Model> models =
+            ModelImporter().import("models/satellite/satellite.obj");
+        for (ModelImporter::Model& model : models)
         {
-            vec3 pos;
-            vec2 texCoord;
-            vec3 normal;
-            vec3 tangent;
-            vec3 bitangent;
-        };
+            model.transform->position.z += 9600;
 
-//        const int ringCount   = 32;
-//        const int sectorCount = 32;
-//        const float pi        = float(M_PI);
-//        const float half_pi   = pi * 0.5f;
-//        const float radius    = planet.radius;
-
-//        const float ringStep   = 1.0f / float(ringCount   - 1);
-//        const float sectorStep = 1.0f / float(sectorCount - 1);
-
-        std::vector<Vertex> vertexData;
-//        for(int r = 0; r < ringCount;   ++r)
-//        for(int s = 0; s < sectorCount; ++s)
-//        {
-//            float y = sin(half_pi + pi * r * ringStep);
-//            float x = cos(2.0f * pi * s * sectorStep) * sin(pi * r * ringStep);
-//            float z = sin(2.0f * pi * s * sectorStep) * sin(pi * r * ringStep);
-
-//            Vertex v;
-//            v.pos = vec3(x, y, z) * radius;
-//            v.texCoord = vec2(s * sectorStep, r * ringStep);
-//            v.normal = normalize(v.pos);
-
-//            vertexData.push_back(v);
-//        }
-
-        std::vector<unsigned int> indexData;
-//        for(int r = 0; r < ringCount   - 1; r++)
-//        for(int s = 0; s < sectorCount - 1; s++)
-//        {
-//            unsigned ia = unsigned((r+0) * sectorCount + (s+0));
-//            unsigned ib = unsigned((r+0) * sectorCount + (s+1));
-//            unsigned ic = unsigned((r+1) * sectorCount + (s+1));
-//            unsigned id = unsigned((r+1) * sectorCount + (s+0));
-
-//            indexData.push_back(id);
-//            indexData.push_back(ia);
-//            indexData.push_back(ib);
-
-//            indexData.push_back(ib);
-//            indexData.push_back(ic);
-//            indexData.push_back(id);
-//        }
-
-        indexCount = GLsizei(indexData.size());
-
-        for (size_t i = 0; i < indexData.size(); i += 3)
-        {
-            Vertex& v1 = vertexData[indexData[i + 0]];
-            Vertex& v2 = vertexData[indexData[i + 1]];
-            Vertex& v3 = vertexData[indexData[i + 2]];
-
-            glm::dvec3 edge1 = v2.pos - v1.pos;
-            glm::dvec3 edge2 = v3.pos - v1.pos;
-            glm::dvec2 dUV1 = v2.texCoord - v1.texCoord;
-            glm::dvec2 dUV2 = v3.texCoord - v1.texCoord;
-
-            double f = 1.0 / (dUV1.x * dUV2.y -
-                              dUV2.x * dUV1.y);
-
-            glm::dvec3 tangent;
-            tangent.x = f * (dUV2.y * edge1.x - dUV1.y * edge2.x);
-            tangent.y = f * (dUV2.y * edge1.y - dUV1.y * edge2.y);
-            tangent.z = f * (dUV2.y * edge1.z - dUV1.y * edge2.z);
-            tangent = glm::normalize(tangent);
-
-            glm::dvec3 bitangent;
-            bitangent.x = f * (-dUV2.x * edge1.x + dUV1.x * edge2.x);
-            bitangent.y = f * (-dUV2.x * edge1.y + dUV1.x * edge2.y);
-            bitangent.z = f * (-dUV2.x * edge1.z + dUV1.x * edge2.z);
-            bitangent = glm::normalize(bitangent);
-
-            v1.tangent = tangent;
-            v2.tangent = tangent;
-            v3.tangent = tangent;
-
-            v1.bitangent = bitangent;
-            v2.bitangent = bitangent;
-            v3.bitangent = bitangent;
+            Mesh mesh  = {};
+            mesh.model = model;
+            meshes.push_back(mesh);
         }
-
-        std::vector<float> vertexData2;
-        for (const Vertex& v : vertexData)
-        {
-            vertexData2.push_back(v.pos.x);
-            vertexData2.push_back(v.pos.y);
-            vertexData2.push_back(v.pos.z);
-            vertexData2.push_back(v.texCoord.x);
-            vertexData2.push_back(v.texCoord.y);
-            vertexData2.push_back(v.normal.x);
-            vertexData2.push_back(v.normal.y);
-            vertexData2.push_back(v.normal.z);
-            vertexData2.push_back(v.tangent.x);
-            vertexData2.push_back(v.tangent.y);
-            vertexData2.push_back(v.tangent.z);
-            vertexData2.push_back(v.bitangent.x);
-            vertexData2.push_back(v.bitangent.y);
-            vertexData2.push_back(v.bitangent.z);
-        }
-
-        glGenBuffers(1, &vbo);
-        glGenBuffers(1, &ibo);
-
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER,
-                     GLsizeiptr(vertexData2.size() * sizeof(float)),
-                     vertexData2.data(),
-                     GL_STATIC_DRAW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                     GLsizeiptr(indexData.size() * sizeof(unsigned int)),
-                     indexData.data(),
-                     GL_STATIC_DRAW);
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
-    void createTextures()
+    void createTextures(Mesh& mesh)
     {
+        std::shared_ptr<ModelImporter::Material> material = mesh.model.material;
+        if (!material)
+            return;
+        if (material->albedo.empty())
+            return;
+        mesh.texAlbedo   =opengl_texture_loader::load(material->albedo,   4, true);
 //        texNight    = opengl_texture_loader::load(planet.nightMap,    4, true);
 //        texCloud    = opengl_texture_loader::load(planet.cloudMap,    4, false);
-//        texAlbedo   = opengl_texture_loader::load(planet.albedoMap,   3, true);
 //        texNormal   = opengl_texture_loader::load(planet.normalMap,   3, false);
 //        texSpecular = opengl_texture_loader::load(planet.specularMap, 4, false);
     }
@@ -216,61 +194,89 @@ struct OpenGLSatellite::Impl
      * ------------------------------------------------------------ */
     ~Impl()
     {
-        glDeleteVertexArrays(1, &vao);
-        glDeleteBuffers(1, &vbo);
-        glDeleteBuffers(1, &ibo);
+//        glDeleteVertexArrays(1, &vao);
+//        glDeleteBuffers(1, &vbo);
+//        glDeleteBuffers(1, &ibo);
     }
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
     void loadResources()
     {
-        createTextures();
+        loadModel();
+//        createTextures();
     }
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
-    void draw()
+    void draw(const glm::mat4& viewMatrix,
+              const glm::mat4& projectionMatrix)
     {
-        if (vao == 0)
+        for (Mesh& mesh : meshes)
         {
-            createMeshBuffers();
-            createMeshVao();
+            if (mesh.vao != 0)
+                continue;
+
+            createMesh(mesh);
+            createTextures(mesh);
         }
 
-//        glActiveTexture(GL_TEXTURE0);
-//        glBindTexture(GL_TEXTURE_2D, texAlbedo);
-//        glActiveTexture(GL_TEXTURE1);
-//        glBindTexture(GL_TEXTURE_2D, texNormal);
-//        glActiveTexture(GL_TEXTURE2);
-//        glBindTexture(GL_TEXTURE_2D, texSpecular);
-//        glActiveTexture(GL_TEXTURE3);
-//        glBindTexture(GL_TEXTURE_2D, texCloud);
-//        glActiveTexture(GL_TEXTURE4);
-//        glBindTexture(GL_TEXTURE_2D, texNight);
+        for (Mesh& mesh : meshes)
+        {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, mesh.texAlbedo);
+    //        glActiveTexture(GL_TEXTURE1);
+    //        glBindTexture(GL_TEXTURE_2D, texNormal);
+    //        glActiveTexture(GL_TEXTURE2);
+    //        glBindTexture(GL_TEXTURE_2D, texSpecular);
+    //        glActiveTexture(GL_TEXTURE3);
+    //        glBindTexture(GL_TEXTURE_2D, texCloud);
+    //        glActiveTexture(GL_TEXTURE4);
+    //        glBindTexture(GL_TEXTURE_2D, texNight);
 
-        glBindVertexArray(vao);
-        glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
-        glBindVertexArray(0);
+            const glm::mat4 modelMatrix  = satellite->matrix(); //mesh.model.transform->matrix();
+            const glm::mat3 normalMatrix = glm::mat3(glm::inverseTranspose(modelMatrix));
+
+
+            glUseProgram(pgm);
+            glUniformMatrix4fv(uniformModelMatrix, 1,
+                               GL_FALSE, glm::value_ptr(modelMatrix));
+            glUniformMatrix4fv(uniformViewMatrix, 1,
+                               GL_FALSE, glm::value_ptr(viewMatrix));
+            glUniformMatrix4fv(uniformProjectionMatrix, 1,
+                               GL_FALSE, glm::value_ptr(projectionMatrix));
+            glUniformMatrix3fv(uniformNormalMatrix, 1,
+                               GL_FALSE, glm::value_ptr(normalMatrix));
+            glUniform1i(uniformAlbedoMap,   0);
+//            glUniform1i(uniformNormalMap,   1);
+//            glUniform1i(uniformSpecularMap, 2);
+//            glUniform1i(uniformCloudMap,    3);
+//            glUniform1i(uniformNightMap,    4);
+
+            glBindVertexArray(mesh.vao);
+            glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT, nullptr);
+            glBindVertexArray(0);
+        }
     }
 
-    /* ------------------------------------------------------------ *
-     * ------------------------------------------------------------ */
-    GLuint vao = 0;
-    GLuint vbo;
-    GLuint ibo;
-    GLsizei indexCount;
-//    GLuint texAlbedo;
-//    GLuint texNormal;
-//    GLuint texSpecular;
-//    GLuint texCloud;
-//    GLuint texNight;
+    std::shared_ptr<RendererScene::Satellite> satellite;
+    std::vector<Mesh> meshes;
+    GLuint pgm = 0;
+    GLint uniformProjectionMatrix;
+    GLint uniformViewMatrix;
+    GLint uniformModelMatrix;
+    GLint uniformNormalMatrix;
+    GLint uniformAlbedoMap;
+    GLint uniformNormalMap;
+    GLint uniformSpecularMap;
+    GLint uniformCloudMap;
+    GLint uniformNightMap;
 };
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-OpenGLSatellite::OpenGLSatellite()
-    : impl(std::make_shared<Impl>())
+OpenGLSatellite::OpenGLSatellite(std::shared_ptr<RendererScene::Satellite> satellite)
+    : impl(std::make_shared<Impl>(satellite))
 {}
 
 /* ---------------------------------------------------------------- *
@@ -280,8 +286,9 @@ void OpenGLSatellite::loadResources()
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-void OpenGLSatellite::draw()
-{ impl->draw(); }
+void OpenGLSatellite::draw(const glm::mat4& view,
+                           const glm::mat4& projection)
+{ impl->draw(view, projection); }
 
 } // namespace sunne
 } // namespace kuu

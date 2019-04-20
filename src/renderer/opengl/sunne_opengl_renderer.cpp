@@ -47,14 +47,14 @@ struct OpenGLRenderer::Impl
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
-    void loadResources(const RendererScene& scene)
+    void loadResources(std::shared_ptr<RendererScene> scene)
     {
         shading->load(scene);
     }
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
-    void render(const RendererScene& scene)
+    void render(std::shared_ptr<RendererScene> scene)
     {
         shading->draw(scene);
         atmosphereEffect->draw(scene);
@@ -103,12 +103,12 @@ void OpenGLRenderer::resize(const glm::ivec2& size)
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-void OpenGLRenderer::render(const RendererScene& scene)
+void OpenGLRenderer::render(std::shared_ptr<RendererScene> scene)
 { impl->render(scene); }
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-void OpenGLRenderer::loadResources(const RendererScene& scene)
+void OpenGLRenderer::loadResources(std::shared_ptr<RendererScene> scene)
 {
     impl->loadResources(scene);
 }

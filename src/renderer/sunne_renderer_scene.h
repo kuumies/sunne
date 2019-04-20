@@ -64,13 +64,23 @@ public:
         std::string nightMap;
     };
 
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    struct Satellite
+    {
+        glm::mat4 matrix() const;
+        glm::vec3 position;
+        glm::quat rotation;
+    };
+
     // Constructs the default scene with sun and earth, camera is
     // observing the planet from outside.
     RendererScene();
 
-    Camera camera;
-    std::vector<Star> stars;
-    std::vector<Planet> planets;
+    std::shared_ptr<Camera> camera;
+    std::vector<std::shared_ptr<Star>> stars;
+    std::vector<std::shared_ptr<Planet>> planets;
+    std::shared_ptr<Satellite> satellite;
 };
 
 } // namespace sunne

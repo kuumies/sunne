@@ -1,9 +1,9 @@
 /* ---------------------------------------------------------------- *
    Antti Jumpponen <kuumies@gmail.com>
-   Implementation of kuu::sunne::CameraOrbit class.
+   Implementation of kuu::sunne::SatelliteOrbit class.
  * ---------------------------------------------------------------- */
 
-#include "sunne_camera_orbit.h"
+#include "sunne_satellite_orbit.h"
 #include "window/sunne_window_user_input.h"
 #include <iostream>
 
@@ -14,13 +14,13 @@ namespace sunne
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-struct CameraOrbit::Impl
+struct SatelliteOrbit::Impl
 {
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
-    Impl(CameraOrbit* self, std::shared_ptr<RendererScene::Camera> camera)
+    Impl(SatelliteOrbit* self, std::shared_ptr<RendererScene::Satellite> satellite)
         : self(self)
-        , camera(camera)
+        , satellite(satellite)
     {}
 
     /* ------------------------------------------------------------ *
@@ -31,24 +31,24 @@ struct CameraOrbit::Impl
         const float seconds = elapsed / 1000.0f;
         const float rotInc = seconds * rotPerSecond;
         glm::quat rot = glm::angleAxis(glm::radians(rotInc), glm::vec3(-1.0f, 0.0f, 0.0f));
-        camera->rotation *= rot;
+        satellite->rotation *= rot;
     }
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
-    CameraOrbit* self;
-    std::shared_ptr<RendererScene::Camera> camera;
+    SatelliteOrbit* self;
+    std::shared_ptr<RendererScene::Satellite> satellite;
 };
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-CameraOrbit::CameraOrbit(std::shared_ptr<RendererScene::Camera> camera)
-    : impl(std::make_shared<Impl>(this, camera))
+SatelliteOrbit::SatelliteOrbit(std::shared_ptr<RendererScene::Satellite> satellite)
+    : impl(std::make_shared<Impl>(this, satellite))
 {}
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-void CameraOrbit::update(float elapsed)
+void SatelliteOrbit::update(float elapsed)
 { impl->update(elapsed); }
 
 } // namespace sunne

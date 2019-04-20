@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------- *
    Antti Jumpponen <kuumies@gmail.com>
-   kuu::OpenGLShadingRender vertex shader.
+   kuu::OpenGLSatellite vertex shader.
  * ---------------------------------------------------------------- */
 
 #version 330 core

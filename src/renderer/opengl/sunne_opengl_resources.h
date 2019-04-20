@@ -16,6 +16,7 @@ namespace sunne
 /* ---------------------------------------------------------------- */
 
 class OpenGLPlanet;
+class OpenGLSatellite;
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
@@ -25,7 +26,9 @@ public:
     OpenGLResources();
 
     std::shared_ptr<OpenGLPlanet> openglPlanet(
-        const RendererScene::Planet& planet);
+        std::shared_ptr<RendererScene::Planet> planet);
+    std::shared_ptr<OpenGLSatellite> openglSatellite(
+        std::shared_ptr<RendererScene::Satellite> satellite);
 
 private:
     struct Impl;

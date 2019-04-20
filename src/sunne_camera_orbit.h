@@ -18,7 +18,7 @@ namespace sunne
 class CameraOrbit
 {
 public:
-    CameraOrbit(RendererScene::Camera* camera);
+    CameraOrbit(std::shared_ptr<RendererScene::Camera> camera);
 
     void update(float elapsed);
 

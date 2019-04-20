@@ -65,7 +65,8 @@ include_directories(external/stb)
 set(BUILD_SHARED_LIBS OFF CACHE STRING "" FORCE)
 set(ASSIMP_INSTALL_PDB OFF CACHE STRING "" FORCE)
 add_subdirectory(external/assimp)
-include_directories(external/assimp/code)
+include_directories(external/assimp/include)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/external/assimp/include)
 
 #---------------------------------------------------------------------
 # Sources
@@ -98,6 +99,8 @@ target_link_libraries(
     ${CMAKE_CURRENT_BINARY_DIR}/external/glfw/src/glfw3.lib
     ${CMAKE_CURRENT_BINARY_DIR}/external/glad/gladlib.lib
     ${CMAKE_CURRENT_BINARY_DIR}/external/assimp/code/assimp-vc140-mtd.lib
+    ${CMAKE_CURRENT_BINARY_DIR}/external/assimp/contrib/irrXML/IrrXMLd.lib
+    ${CMAKE_CURRENT_BINARY_DIR}/external/assimp/contrib/zlib/zlibstaticd.lib
 )
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)

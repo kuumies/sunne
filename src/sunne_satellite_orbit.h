@@ -1,30 +1,26 @@
 /* ---------------------------------------------------------------- *
    Antti Jumpponen <kuumies@gmail.com>
-   Definition of kuu::sunne::OpenGLAtmosphereEffectRender class
+   Definition of kuu::sunne::SatelliteOrbit class.
  * ---------------------------------------------------------------- */
- 
+
 #pragma once
 
 #include <memory>
-#include <glad/glad.h>
-#include <glm/vec2.hpp>
-#include "../sunne_renderer_scene.h"
+#include "renderer/sunne_renderer_scene.h"
 
 namespace kuu
 {
 namespace sunne
-{ 
+{
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-class OpenGLAtmosphereEffectRender
+class SatelliteOrbit
 {
 public:
-    OpenGLAtmosphereEffectRender(const glm::ivec2& size);
-    void resize(const glm::ivec2& size);
-    void draw(std::shared_ptr<RendererScene> scene);
+    SatelliteOrbit(std::shared_ptr<RendererScene::Satellite> satellite);
 
-    GLuint tex = 0;
+    void update(float elapsed);
 
 private:
     struct Impl;

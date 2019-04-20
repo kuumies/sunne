@@ -24,9 +24,9 @@ class Renderer
 public:
     Renderer();
     virtual ~Renderer();
-    virtual void loadResources(const RendererScene& scene) = 0;
+    virtual void loadResources(std::shared_ptr<RendererScene> scene) = 0;
     virtual void resize(const glm::ivec2& size) = 0;
-    virtual void render(const RendererScene& scene) = 0;
+    virtual void render(std::shared_ptr<RendererScene> scene) = 0;
     virtual void renderResourceLoadWait() = 0;
 };
 

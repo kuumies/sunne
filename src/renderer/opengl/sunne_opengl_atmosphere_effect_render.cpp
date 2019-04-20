@@ -159,10 +159,10 @@ struct OpenGLAtmosphereEffectRender::Impl
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
-    void draw(const RendererScene& scene)
+    void draw(std::shared_ptr<RendererScene> scene)
     {
-        glm::mat4 invProjection    = glm::inverse(scene.camera.projectionMatrix());
-        glm::mat4 invView          = glm::inverse(scene.camera.viewMatrix());
+        glm::mat4 invProjection    = glm::inverse(scene->camera->projectionMatrix());
+        glm::mat4 invView          = glm::inverse(scene->camera->viewMatrix());
         glm::mat3 invTransposeView = glm::inverseTranspose(glm::mat3(invView));
 
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -206,7 +206,7 @@ OpenGLAtmosphereEffectRender::OpenGLAtmosphereEffectRender(const glm::ivec2& siz
 void OpenGLAtmosphereEffectRender::resize(const glm::ivec2& size)
 { impl->resize(size); }
 
-void OpenGLAtmosphereEffectRender::draw(const RendererScene& scene)
+void OpenGLAtmosphereEffectRender::draw(std::shared_ptr<RendererScene> scene)
 { impl->draw(scene); }
 
 } // namespace sunne

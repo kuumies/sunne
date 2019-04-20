@@ -4,6 +4,7 @@
  * ---------------------------------------------------------------- */
 
 #include "sunne_renderer_scene.h"
+#include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace kuu
@@ -80,7 +81,8 @@ RendererScene::RendererScene()
 
     // Satellite
     satellite = std::make_shared<Satellite>();
-    satellite->position.z = 9600;
+    satellite->position.y = 80;
+    satellite->position.z = 7000;
     //satellite->rotation = glm::angleAxis(glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 }
 

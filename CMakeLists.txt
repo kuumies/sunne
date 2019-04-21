@@ -94,14 +94,25 @@ add_executable(${PROJECT_NAME}
     ${GLSL_SOURCES}
 )
 
-target_link_libraries(
-    ${PROJECT_NAME}
-    ${CMAKE_CURRENT_BINARY_DIR}/external/glfw/src/glfw3.lib
-    ${CMAKE_CURRENT_BINARY_DIR}/external/glad/gladlib.lib
-    ${CMAKE_CURRENT_BINARY_DIR}/external/assimp/code/assimp-vc140-mtd.lib
-    ${CMAKE_CURRENT_BINARY_DIR}/external/assimp/contrib/irrXML/IrrXMLd.lib
-    ${CMAKE_CURRENT_BINARY_DIR}/external/assimp/contrib/zlib/zlibstaticd.lib
-)
+if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
+    target_link_libraries(
+        ${PROJECT_NAME}
+        ${CMAKE_CURRENT_BINARY_DIR}/external/glfw/src/glfw3.lib
+        ${CMAKE_CURRENT_BINARY_DIR}/external/glad/gladlib.lib
+        ${CMAKE_CURRENT_BINARY_DIR}/external/assimp/code/assimp-vc140-mtd.lib
+        ${CMAKE_CURRENT_BINARY_DIR}/external/assimp/contrib/irrXML/IrrXMLd.lib
+        ${CMAKE_CURRENT_BINARY_DIR}/external/assimp/contrib/zlib/zlibstaticd.lib
+    )
+else()
+    target_link_libraries(
+        ${PROJECT_NAME}
+        ${CMAKE_CURRENT_BINARY_DIR}/external/glfw/src/glfw3.lib
+        ${CMAKE_CURRENT_BINARY_DIR}/external/glad/gladlib.lib
+        ${CMAKE_CURRENT_BINARY_DIR}/external/assimp/code/assimp-vc140-mt.lib
+        ${CMAKE_CURRENT_BINARY_DIR}/external/assimp/contrib/irrXML/IrrXML.lib
+        ${CMAKE_CURRENT_BINARY_DIR}/external/assimp/contrib/zlib/zlibstatic.lib
+    )
+endif()
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
 

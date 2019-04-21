@@ -163,10 +163,10 @@ struct OpenGLSatellite::Impl
     {
         meshes.clear();
         std::vector<ModelImporter::Model> models =
-            ModelImporter().import("models/satellite/satellite.obj");
+            ModelImporter().import("models/satellite/satellite.gltf");
         for (ModelImporter::Model& model : models)
         {
-            model.transform->position.z += 9600;
+            //model.transform->position.z += 9600;
 
             Mesh mesh  = {};
             mesh.model = model;
@@ -183,11 +183,7 @@ struct OpenGLSatellite::Impl
             return;
         if (material->albedo.empty())
             return;
-        mesh.texAlbedo   =opengl_texture_loader::load(material->albedo,   4, true);
-//        texNight    = opengl_texture_loader::load(planet.nightMap,    4, true);
-//        texCloud    = opengl_texture_loader::load(planet.cloudMap,    4, false);
-//        texNormal   = opengl_texture_loader::load(planet.normalMap,   3, false);
-//        texSpecular = opengl_texture_loader::load(planet.specularMap, 4, false);
+        mesh.texAlbedo  = opengl_texture_loader::load(material->albedo, 3, true);
     }
 
     /* ------------------------------------------------------------ *
@@ -225,18 +221,9 @@ struct OpenGLSatellite::Impl
         {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, mesh.texAlbedo);
-    //        glActiveTexture(GL_TEXTURE1);
-    //        glBindTexture(GL_TEXTURE_2D, texNormal);
-    //        glActiveTexture(GL_TEXTURE2);
-    //        glBindTexture(GL_TEXTURE_2D, texSpecular);
-    //        glActiveTexture(GL_TEXTURE3);
-    //        glBindTexture(GL_TEXTURE_2D, texCloud);
-    //        glActiveTexture(GL_TEXTURE4);
-    //        glBindTexture(GL_TEXTURE_2D, texNight);
 
-            const glm::mat4 modelMatrix  = satellite->matrix(); //mesh.model.transform->matrix();
+            const glm::mat4 modelMatrix  = satellite->matrix();
             const glm::mat3 normalMatrix = glm::mat3(glm::inverseTranspose(modelMatrix));
-
 
             glUseProgram(pgm);
             glUniformMatrix4fv(uniformModelMatrix, 1,
@@ -248,11 +235,7 @@ struct OpenGLSatellite::Impl
             glUniformMatrix3fv(uniformNormalMatrix, 1,
                                GL_FALSE, glm::value_ptr(normalMatrix));
             glUniform1i(uniformAlbedoMap,   0);
-//            glUniform1i(uniformNormalMap,   1);
-//            glUniform1i(uniformSpecularMap, 2);
-//            glUniform1i(uniformCloudMap,    3);
-//            glUniform1i(uniformNightMap,    4);
-
+//
             glBindVertexArray(mesh.vao);
             glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT, nullptr);
             glBindVertexArray(0);

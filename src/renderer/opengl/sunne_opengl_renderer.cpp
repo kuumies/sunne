@@ -109,16 +109,12 @@ void OpenGLRenderer::render(std::shared_ptr<RendererScene> scene)
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
 void OpenGLRenderer::loadResources(std::shared_ptr<RendererScene> scene)
-{
-    impl->loadResources(scene);
-}
+{ impl->loadResources(scene); }
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
 void OpenGLRenderer::renderResourceLoadWait()
-{
-    impl->renderResourceLoadWait();
-}
+{ impl->renderResourceLoadWait(); }
 
 } // namespace sunne
 } // namespace kuu

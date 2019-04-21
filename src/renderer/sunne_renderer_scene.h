@@ -26,16 +26,35 @@ public:
     class Camera
     {
     public:
+        struct Lens
+        {
+            float focalLength    = 42.0f;    // mm
+            float focusDistance  = 20000.0f; // mm
+            float fStop          = 1.0f;     // f/N
+            glm::ivec2 filmSize  = glm::ivec2(28.0f, 21.0f); // mm
+            bool debug           = false;
+
+            float fieldOfView() const
+            {
+                return glm::degrees(
+                    2.0f * std::atan(
+                        0.5f *  filmSize.y / focalLength));
+            }
+        };
+
         glm::mat4 viewMatrix() const;
         glm::mat4 projectionMatrix() const;
 
-        glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f);
-        glm::quat rotation = glm::quat();
+        glm::vec3 position  = glm::vec3(0.0f, 0.0f, 3.0f);
+        glm::quat rotation  = glm::quat();
+        glm::quat rotation2 = glm::angleAxis(float(M_PI/3), glm::vec3(1.0f, 0.0f, 0.0f));
+        bool doubleRot = false;
 
         float fieldOfView = 45.0f;
         float aspectRatio = 1.0f;
         float nearPlane   = 0.1f;
         float farPlane    = 150.0f;
+        Lens lens;
     };
 
     /* ------------------------------------------------------------ *

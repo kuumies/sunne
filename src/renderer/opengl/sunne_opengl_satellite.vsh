@@ -52,6 +52,7 @@ void main()
     b = cross(n, t);
 
     vsOut.texCoord    = texCoord;
+    vsOut.texCoord.y = 1.0 - vsOut.texCoord.y;
     vsOut.worldNormal = matrices.normal * normal;
     vsOut.worldPos    = vec3(matrices.model * vec4(position, 1.0));
     vsOut.cameraPos   = vec3(matrices.model * matrices.view * vec4(position, 1.0));

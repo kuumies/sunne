@@ -6,6 +6,7 @@
 #include "sunne_renderer_scene.h"
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 namespace kuu
 {
@@ -17,9 +18,17 @@ namespace sunne
 glm::mat4 RendererScene::Camera::viewMatrix() const
 {
     glm::mat4 view(1.0f);
-    view *= glm::mat4_cast(rotation);
-    view = glm::translate(view, position);
-    view *= glm::mat4_cast(glm::angleAxis(float(M_PI/3), glm::vec3(1.0f, 0.0f, 0.0f)));
+    if (doubleRot)
+    {
+        view *= glm::mat4_cast(rotation);
+        view = glm::translate(view, position);
+        view *= glm::mat4_cast(rotation2);
+    }
+    else
+    {
+        view = glm::translate(view, position);
+        view *= glm::mat4_cast(rotation);
+    }
     return glm::inverse(view);
 }
 
@@ -28,7 +37,7 @@ glm::mat4 RendererScene::Camera::viewMatrix() const
 glm::mat4 RendererScene::Camera::projectionMatrix() const
 {
     return glm::perspective(
-        glm::radians(fieldOfView),
+        glm::radians(lens.fieldOfView()),
         aspectRatio,
         nearPlane,
         farPlane);
@@ -38,10 +47,10 @@ glm::mat4 RendererScene::Camera::projectionMatrix() const
  * ---------------------------------------------------------------- */
 glm::mat4 RendererScene::Satellite::matrix() const
 {
+    //std::cout << glm::to_string(rotation) << std::endl;
     glm::mat4 r = glm::mat4_cast(rotation);
     glm::mat4 t = glm::translate(glm::mat4(1.0f), position);
-    glm::mat4 s = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
-    return r * t * s;
+    return r * t;
 }
 
 /* ---------------------------------------------------------------- *
@@ -74,15 +83,18 @@ RendererScene::RendererScene()
     const double atmosphereRadius = 6420;
     const double distance = atmosphereRadius * 1.1;
     camera = std::make_shared<Camera>();
-    camera->position = glm::vec3(0.0f, 0.0f, distance);
+    //camera->position = glm::vec3(0.0f, 0.0f, distance);
+    //camera->position = glm::vec3(0.000000, 48.000000, 7048.000000);
+    camera->position = glm::vec3(100.000000, 48.000000, 11000.000000);
     //camera.position = glm::vec3(0.0f, 0.0f, 10.0f);
     camera->farPlane = distance * 3;
+    camera->lens.focalLength = 14.0f;
     std::cout << distance << std::endl;
 
     // Satellite
     satellite = std::make_shared<Satellite>();
-    satellite->position.y = 80;
-    satellite->position.z = 7000;
+    satellite->position.y = 15;
+    satellite->position.z = 7050;
     //satellite->rotation = glm::angleAxis(glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 }
 

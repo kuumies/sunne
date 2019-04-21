@@ -96,42 +96,111 @@ struct OpenGLPlanet::Impl
         const float half_pi   = pi * 0.5f;
         const float radius    = planet->radius;
 
-        const float ringStep   = 1.0f / float(ringCount   - 1);
-        const float sectorStep = 1.0f / float(sectorCount - 1);
-
         std::vector<Vertex> vertexData;
-        for(int r = 0; r < ringCount;   ++r)
-        for(int s = 0; s < sectorCount; ++s)
+        std::vector<unsigned> indexData;
+        unsigned vertexCount = 0;
+
+        auto addVertex = [&](const Vertex& v)
         {
-            float y = sin(half_pi + pi * r * ringStep);
-            float x = cos(2.0f * pi * s * sectorStep) * sin(pi * r * ringStep);
-            float z = sin(2.0f * pi * s * sectorStep) * sin(pi * r * ringStep);
-
-            Vertex v;
-            v.pos = vec3(x, y, z) * radius;
-            v.texCoord = vec2(s * sectorStep, r * ringStep);
-            v.normal = normalize(v.pos);
-
             vertexData.push_back(v);
-        }
+            indexData.push_back(vertexCount);
+            vertexCount++;
+        };
 
-        std::vector<unsigned int> indexData;
-        for(int r = 0; r < ringCount   - 1; r++)
-        for(int s = 0; s < sectorCount - 1; s++)
+        auto addTriangle = [&](
+                const Vertex& a,
+                const Vertex& b,
+                const Vertex& c)
         {
-            unsigned ia = unsigned((r+0) * sectorCount + (s+0));
-            unsigned ib = unsigned((r+0) * sectorCount + (s+1));
-            unsigned ic = unsigned((r+1) * sectorCount + (s+1));
-            unsigned id = unsigned((r+1) * sectorCount + (s+0));
+            addVertex(a);
+            addVertex(b);
+            addVertex(c);
+        };
 
-            indexData.push_back(id);
-            indexData.push_back(ia);
-            indexData.push_back(ib);
+        auto addQuad = [&](
+                const Vertex& a,
+                const Vertex& b,
+                const Vertex& c,
+                const Vertex& d)
+        {
+            addTriangle(a, d, c);
+            addTriangle(c, b, a);
+        };
 
-            indexData.push_back(ib);
-            indexData.push_back(ic);
-            indexData.push_back(id);
+        float ringStep   = 1.0f / float(ringCount   - 1);
+        float sectorStep = 1.0f / float(sectorCount - 1);
+
+        std::vector<Vertex> vertices2;
+        for(int r = 0; r < ringCount; ++r)
+            for( int s = 0; s < sectorCount; ++s)
+            {
+                float y = sin(-M_PI_2 + M_PI * r * ringStep);
+                float x = cos(2 * M_PI * s * sectorStep) * sin(M_PI * r * ringStep);
+                float z = sin(2 * M_PI * s * sectorStep) * sin(M_PI * r * ringStep);
+
+                glm::vec3 p = glm::vec3(x, y, z) * float(radius);
+                glm::vec2 tc = glm::vec2(s * sectorStep, r * ringStep);
+                glm::vec3 n = glm::normalize(p - glm::vec3(0.0f));
+                glm::vec3 t;
+                glm::vec3 bt;
+
+                vertices2.push_back(
+                { p, tc, n, t, bt });
+            }
+        //unsigned vertexCount = 0;
+
+        for(int r = 0; r < ringCount - 1; r++)
+        {
+            for(int s = 0; s < sectorCount - 1; s++)
+            {
+                int ia = (r+0) * sectorCount + (s+0);
+                int ib = (r+0) * sectorCount + (s+1);
+                int ic = (r+1) * sectorCount + (s+1);
+                int id = (r+1) * sectorCount + (s+0);
+
+                addQuad(vertices2[id],
+                        vertices2[ic],
+                        vertices2[ib],
+                        vertices2[ia]);
+            }
         }
+
+        //        const float ringStep   = 1.0f / float(ringCount   - 1);
+//        const float sectorStep = 1.0f / float(sectorCount - 1);
+
+//        std::vector<Vertex> vertexData;
+//        for(int r = 0; r < ringCount;   ++r)
+//        for(int s = 0; s < sectorCount; ++s)
+//        {
+//            float y = sin(half_pi + pi * r * ringStep);
+//            float x = cos(2.0f * pi * s * sectorStep) * sin(pi * r * ringStep);
+//            float z = sin(2.0f * pi * s * sectorStep) * sin(pi * r * ringStep);
+
+//            Vertex v;
+//            v.pos = vec3(x, y, z) * radius;
+//            v.texCoord = vec2(s * sectorStep, r * ringStep);
+//            v.normal = normalize(v.pos);
+
+//            vertexData.push_back(v);
+//        }
+
+//        std::vector<unsigned int> indexData;
+//        for(int r = 0; r < ringCount   - 1; r++)
+//        for(int s = 0; s < sectorCount - 1; s++)
+//        {
+//            unsigned ia = unsigned((r+0) * sectorCount + (s+0));
+//            unsigned ib = unsigned((r+0) * sectorCount + (s+1));
+//            unsigned ic = unsigned((r+1) * sectorCount + (s+1));
+//            unsigned id = unsigned((r+1) * sectorCount + (s+0));
+
+//            indexData.push_back(id);
+//            indexData.push_back(ia);
+//            indexData.push_back(ib);
+
+//            indexData.push_back(ib);
+//            indexData.push_back(ic);
+//            indexData.push_back(id);
+//        }
 
         indexCount = GLsizei(indexData.size());
 
@@ -281,7 +350,8 @@ struct OpenGLPlanet::Impl
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, texNight);
 
-        const glm::mat4 modelMatrix  = glm::mat4(1.0f);
+        const glm::quat rot = glm::angleAxis(glm::radians(planet->inclination), glm::vec3(0.0f, 0.0f, 1.0f));
+        const glm::mat4 modelMatrix  = glm::mat4_cast(rot);
         const glm::mat3 normalMatrix = glm::mat3(glm::inverseTranspose(modelMatrix));
 
         glUseProgram(pgm);

@@ -7,6 +7,7 @@
 
 #include <memory>
 #include "renderer/sunne_renderer_scene.h"
+#include "window/sunne_window_user_input.h"
 
 namespace kuu
 {
@@ -21,6 +22,8 @@ public:
     CameraOrbit(std::shared_ptr<RendererScene::Camera> camera);
 
     void update(float elapsed);
+    void setUserInput(const WindowUserInput& ui);
+    void setTarget(std::shared_ptr<RendererScene::Satellite> target);
 
 private:
     struct Impl;

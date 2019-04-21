@@ -143,9 +143,9 @@ struct OpenGLShadingRender::Impl
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        resources->openglSatellite(scene->satellite)->draw(view, projection);
         for (std::shared_ptr<RendererScene::Planet> planet : scene->planets)
             resources->openglPlanet(planet)->draw(view, projection);
-        resources->openglSatellite(scene->satellite)->draw(view, projection);
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }

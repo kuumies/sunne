@@ -28,6 +28,7 @@ struct Controller::Impl
         , closeApp(false)
         , resourceLoadStart(true)
         , resourceLoad(false)
+        , paused(false)
     {}
 
     /* ------------------------------------------------------------ *
@@ -48,8 +49,8 @@ struct Controller::Impl
         params.title        = "Sunne";
         params.callback     = self;
         params.fullscreen   = false;
-        params.size.x       = 960;
-        params.size.y       = 540;
+        params.size.x       = 1920;
+        params.size.y       = 817;
 
         window = std::make_shared<OpenGLWindow>(params);
     }
@@ -116,6 +117,7 @@ struct Controller::Impl
     bool closeApp;
     bool resourceLoadStart;
     bool resourceLoad;
+    bool paused;
 };
 
 /* ---------------------------------------------------------------- *
@@ -134,6 +136,7 @@ void Controller::run()
     impl->createWindow();
     impl->createCameraOrbit();
     impl->createSatelliteOrbit();
+    impl->cameraOrbit->setTarget(impl->scene->satellite);
     impl->window->run();
 }
 
@@ -158,6 +161,14 @@ void Controller::update(double elapsed)
     if (impl->resourceLoad)
         return;
 
+    static float totTime = 0.0;
+    totTime += elapsed;
+    if (totTime < 2000.0f)
+        return;
+
+    if (impl->paused)
+        return;
+
     impl->cameraOrbit->update(float(elapsed));
     impl->satelliteOrbit->update(float(elapsed));
 }
@@ -178,6 +189,10 @@ void Controller::setUserInput(const WindowUserInput& i)
 {
     if (i.key.key == GLFW_KEY_ESCAPE)
         impl->closeApp = true;
+    if (i.key.key == GLFW_KEY_SPACE)
+        if (i.key.status == GLFW_PRESS)
+            impl->paused = !impl->paused;
+    impl->cameraOrbit->setUserInput(i);
 }
 
 /* ---------------------------------------------------------------- *

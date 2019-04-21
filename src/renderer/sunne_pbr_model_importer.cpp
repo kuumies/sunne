@@ -110,7 +110,7 @@ struct ModelImporter::Impl
         if (material->GetTexture(textureType, 0, &path) != aiReturn_SUCCESS)
             return "models/satellite/satellite_def_albedo.png";
 
-        return std::string(path.C_Str());
+        return "models/satellite/" + std::string(path.C_Str());
     }
 
     /* ------------------------------------------------------------ *

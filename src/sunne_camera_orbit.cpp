@@ -15,8 +15,12 @@ namespace kuu
 {
 namespace sunne
 {
+namespace
+{
 
-// See: http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-17-quaternions/
+/* ---------------------------------------------------------------- *
+   See: http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-17-quaternions/
+ * ---------------------------------------------------------------- */
 glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest)
 {
     using namespace glm;
@@ -52,7 +56,9 @@ glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest)
     );
 }
 
-// See: http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-17-quaternions/
+/* ---------------------------------------------------------------- *
+   See: http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-17-quaternions/
+ * ---------------------------------------------------------------- */
 glm::quat lookAt(glm::vec3 direction,
                  glm::vec3 desiredUp)
 {
@@ -75,6 +81,8 @@ glm::quat lookAt(glm::vec3 direction,
     return targetOrientation;
 }
 
+} // anonymous namespace
+
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
 struct CameraOrbit::Impl
@@ -84,79 +92,80 @@ struct CameraOrbit::Impl
     Impl(CameraOrbit* self, std::shared_ptr<RendererScene::Camera> camera)
         : self(self)
         , camera(camera)
-    {
-        target  = camera->rotation;
-        target2 = camera->rotation2;
-        p = glm::angleAxis(float(M_PI/3), glm::vec3(1.0f, 0.0f, 0.0f));
-        pitch = glm::degrees(float(M_PI/3));
-    }
+    {}
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
     void update(float elapsed)
     {
-        static float totTime = 0.0f;
+        auto map = [](const glm::mat4& m)
+        { return glm::vec3(m * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)); };
+
         totTime += elapsed;
-        if (totTime < 23550)
+
+        const float cutA = 23550.0f;
+        const float cutB = 46000.0f;
+        const float cutC = 59000.0f;
+        if (totTime < cutA)
         {
-            auto camPos = glm::vec3(glm::inverse(camera->viewMatrix()) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-            auto tgtPos = glm::vec3(targetSatellite->matrix()          * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+            auto camPos = map(glm::inverse(camera->viewMatrix()));
+            auto tgtPos = map(targetSatellite->matrix());
+            auto dir    = glm::normalize(camPos - tgtPos);
+            camera->rotation = lookAt(dir, glm::vec3(0, 1, 0));
 
-            camera->doubleRot = false;
-            camera->rotation = lookAt(glm::normalize(camPos - tgtPos), glm::vec3(0, 1, 0));
+            // Run focal length "animation"
+            const float start  = 6000.0f;
+            const float end    = 15000.0f;
+            const float fovMin = 14.0f;
+            const float fovMax = 180.0f;
 
-            if (focalLengthAnimation > 6000.0f)
-                camera->lens.focalLength = glm::mix(14.0f, 180.0f, (focalLengthAnimation - 6000.0f) / 15000.0f);
+            if (focalLengthAnimation > start)
+                camera->lens.focalLength = glm::mix(fovMin, fovMax, (focalLengthAnimation - start) / end);
             focalLengthAnimation += elapsed;
+        }
+        else if (totTime < cutB)
+        {
+            if (!cutSetB)
+            {
+                camera->position = glm::vec3(0.000000, 48.000000, 7048.000000);
+                camera->lens.focalLength = 40.0f;
+                cutSetB = true;
+            }
+
+            auto tgtPos = map(targetSatellite->matrix());
+            auto camPos = map(glm::inverse(camera->viewMatrix()));
+            auto dir    = glm::normalize(camPos - tgtPos);
+            camera->rotation = lookAt(dir, glm::vec3(0, 1, 0));
+            camera->position = tgtPos + glm::vec3(10.0f, 10.0f, 10.0f);
+        }
+        else if (totTime < cutC)
+        {
+            if (!cutSetC)
+            {
+                camera->position = glm::vec3(0.000000, 48.000000, 7048.000000);
+                camera->lens.focalLength = 40.0f;
+                cutSetC = true;
+            }
+
+            auto tgtPos = map(targetSatellite->matrix());
+            auto camPos = map(glm::inverse(camera->viewMatrix()));
+            auto dir    = glm::normalize(camPos - tgtPos);
+            camera->rotation = lookAt(dir, glm::vec3(0, 1, 0));
+            camera->position = tgtPos + glm::vec3(10.0f, 10.0f, -10.0f);
         }
         else
         {
-            if (totTime < 46000.0f)
+            if (cutSetD)
             {
-                static bool first = true;
-                if (first)
-                {
-                    camera->position = glm::vec3(0.000000, 48.000000, 7048.000000);
-                    camera->lens.focalLength = 40.0f;
-                    first = false;
-                }
-
-                auto tgtPos = glm::vec3(targetSatellite->matrix()          * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-                auto camPos = glm::vec3(glm::inverse(camera->viewMatrix()) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-                camera->rotation = lookAt(glm::normalize(camPos - tgtPos), glm::vec3(0, 1, 0));
-                camera->position = tgtPos + glm::vec3(10.0f, 10.0f, 10.0f);
+                camera->lens.focalLength = 60.0f;
+                cutSetD = true;
             }
-            else if (totTime < 59000.0f)
-            {
-                static bool first = true;
-                if (first)
-                {
-                    camera->position = glm::vec3(0.000000, 48.000000, 7048.000000);
-                    camera->lens.focalLength = 40.0f;
-                    first = false;
-                }
 
-                auto tgtPos = glm::vec3(targetSatellite->matrix()          * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-                auto camPos = glm::vec3(glm::inverse(camera->viewMatrix()) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-                camera->rotation = lookAt(glm::normalize(camPos - tgtPos), glm::vec3(0, 1, 0));
-                camera->position = tgtPos + glm::vec3(10.0f, 10.0f, -10.0f);
-            }
-            else
-            {
-                static bool first = true;
-                if (first)
-                {
-                    camera->lens.focalLength = 60.0f;
-                    camera->doubleRot = false;
-                    first = false;
-                }
-
-                auto tgtPos = glm::vec3(targetSatellite->matrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-                auto dir = glm::normalize(tgtPos - glm::vec3(0.0f));
-                glm::quat rot = lookAt(dir, glm::vec3(0, 1, 0));
-                camera->position = -dir * 21000.0f;
-                camera->rotation = rot;
-            }
+            auto tgtPos = map(targetSatellite->matrix());
+            auto dir = glm::normalize(tgtPos - glm::vec3(0.0f));
+            glm::quat rot = lookAt(dir, glm::vec3(0, 1, 0));
+            camera->position = -dir * 21000.0f;
+            camera->rotation = rot;
         }
     }
 
@@ -165,13 +174,11 @@ struct CameraOrbit::Impl
     CameraOrbit* self;
     std::shared_ptr<RendererScene::Camera> camera;
     std::shared_ptr<RendererScene::Satellite> targetSatellite;
-    glm::quat target;
-    glm::quat target2;
-    float pitch = 0.0f, yaw = 0.0f;
-    glm::quat p, y;
-    bool rotate = false;
-    glm::vec2 prevRotPos;
     float focalLengthAnimation = 0.0f;
+    float totTime = 0.0f;
+    bool cutSetB = false;
+    bool cutSetC = false;
+    bool cutSetD = false;
 };
 
 /* ---------------------------------------------------------------- *

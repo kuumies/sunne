@@ -15,6 +15,8 @@
 #include "sunne_window_parameters.h"
 #include "sunne_window_user_input.h"
 
+#include <stb_image.h>
+
 namespace kuu
 {
 namespace sunne
@@ -129,6 +131,22 @@ OpenGLWindow::OpenGLWindow(const WindowParams& params)
 
     glfwMakeContextCurrent(window_);
     glfwSwapInterval(params.vSync ? 1 : 0);
+
+    int imgW, imgH, imgC;
+    stbi_uc* pixels = stbi_load(
+        "textures/icon.png",
+        &imgW,
+        &imgH,
+        &imgC,
+        4);
+    if (pixels)
+    {
+        GLFWimage icon;
+        icon.width  = imgW;
+        icon.height = imgH;
+        icon.pixels = pixels;
+        glfwSetWindowIcon(window_, 1, &icon);
+    }
 
     if (gladLoadGL() == 0)
         throw std::runtime_error(

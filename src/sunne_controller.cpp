@@ -30,6 +30,8 @@ struct Controller::Impl
         , resourceLoadStart(true)
         , resourceLoad(false)
         , paused(false)
+        , endCut(false)
+        , totTime(0.0f)
     {}
 
     /* ------------------------------------------------------------ *
@@ -119,6 +121,8 @@ struct Controller::Impl
     bool resourceLoadStart;
     bool resourceLoad;
     bool paused;
+    bool endCut;
+    float totTime;
 };
 
 /* ---------------------------------------------------------------- *
@@ -162,25 +166,26 @@ void Controller::update(double elapsed)
     if (impl->resourceLoad)
         return;
 
-    static float totTime = 0.0;
-    totTime += elapsed;
-    if (totTime < 5000.0f)
+    impl->totTime += float(elapsed);
+
+    // Wait for a while before strating the initial cut.
+    if (impl->totTime < 5000.0f)
         return;
 
     if (impl->paused)
         return;
 
-    if (totTime > 64000.0f)
+    // Show end cut
+    if (impl->totTime >= 64000.0f)
     {
-        static bool set = false;
-        if (!set)
+        if (!impl->endCut)
         {
             impl->scene->planets[0]->rotate = true;
             impl->scene->planets[0]->rotateAxis = glm::vec3(0, 1, 0);
             impl->scene->camera->position = glm::vec3(100.000000, 48.000000, 11000.000000);
             impl->scene->camera->rotation = glm::quat();
             impl->scene->camera->lens.focalLength = 14.0f;
-            set = true;
+            impl->endCut = true;
         }
         return;
     }

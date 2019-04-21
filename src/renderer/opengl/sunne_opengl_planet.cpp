@@ -38,9 +38,6 @@ struct OpenGLPlanet::Impl
         : self(self)
         , size(size)
     {
-        //createMeshBuffers();
-        //createMeshVao();
-        //createTextures();
         createShader();
         createTexture();
         createRenderbuffer();
@@ -160,9 +157,9 @@ struct OpenGLPlanet::Impl
         for(int r = 0; r < ringCount; ++r)
             for( int s = 0; s < sectorCount; ++s)
             {
-                float y = sin(-M_PI_2 + M_PI * r * ringStep);
-                float x = cos(2 * M_PI * s * sectorStep) * sin(M_PI * r * ringStep);
-                float z = sin(2 * M_PI * s * sectorStep) * sin(M_PI * r * ringStep);
+                float y = sin(-half_pi + pi * r * ringStep);
+                float x = cos(2 * pi * s * sectorStep) * sin(pi * r * ringStep);
+                float z = sin(2 * pi * s * sectorStep) * sin(pi * r * ringStep);
 
                 glm::vec3 p = glm::vec3(x, y, z) * float(radius);
                 glm::vec2 tc = glm::vec2(s * sectorStep, r * ringStep);
@@ -179,10 +176,10 @@ struct OpenGLPlanet::Impl
         {
             for(int s = 0; s < sectorCount - 1; s++)
             {
-                int ia = (r+0) * sectorCount + (s+0);
-                int ib = (r+0) * sectorCount + (s+1);
-                int ic = (r+1) * sectorCount + (s+1);
-                int id = (r+1) * sectorCount + (s+0);
+                size_t ia = size_t((r+0) * sectorCount + (s+0));
+                size_t ib = size_t((r+0) * sectorCount + (s+1));
+                size_t ic = size_t((r+1) * sectorCount + (s+1));
+                size_t id = size_t((r+1) * sectorCount + (s+0));
 
                 addQuad(vertices2[id],
                         vertices2[ic],
@@ -388,7 +385,6 @@ struct OpenGLPlanet::Impl
         {
             createMeshBuffers();
             createMeshVao();
-            //createTextures();
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -407,24 +403,27 @@ struct OpenGLPlanet::Impl
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, texNight);
 
-        static glm::quat rot2;
+        // Inclination rotation
+        glm::quat inclination =
+            glm::angleAxis(glm::radians(planet->inclination),
+                                        glm::vec3(0.0f, 0.0f, 1.0f));
 
-
-        const glm::quat rot = glm::angleAxis(glm::radians(planet->inclination), glm::vec3(0.0f, 0.0f, 1.0f));
+        // Slow rotation
         float amount = 0.0005f;
         glm::vec3 axis = glm::vec3(0.0f, 1.0f, 0.0f);
         if (planet->rotate)
         {
+            // Fast rotation
             amount = 0.05f;
             axis = planet->rotateAxis;
         }
-        rot2 *= glm::angleAxis(glm::radians(amount), axis);
+        rotation *= glm::angleAxis(glm::radians(amount), axis);
 
-        const glm::mat4 modelMatrix  = glm::mat4_cast(rot * rot2);
+        const glm::mat4 modelMatrix  = glm::mat4_cast(inclination * rotation);
         const glm::mat3 normalMatrix = glm::mat3(glm::inverseTranspose(modelMatrix));
 
-        static glm::vec2 texOffset;
-        texOffset.x -= 0.00001f;
+        // Update texture coordinate offset of clouds
+        texOffset.x -= 0.00001f; // note: v-sync is enabled
         if (texOffset.x > 1.0f)
             texOffset.x = 1.0f - texOffset.x;
         if (texOffset.x < 0.0f)
@@ -481,6 +480,8 @@ struct OpenGLPlanet::Impl
     GLint uniformCloudMap;
     GLint uniformNightMap;
     GLint uniformCloudMapTexCoordOffset;
+    glm::vec2 texOffset;
+    glm::quat rotation;
 };
 
 /* ---------------------------------------------------------------- *

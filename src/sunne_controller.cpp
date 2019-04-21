@@ -208,7 +208,6 @@ void Controller::setUserInput(const WindowUserInput& i)
     if (i.key.key == GLFW_KEY_SPACE)
         if (i.key.status == GLFW_PRESS)
             impl->paused = !impl->paused;
-    impl->cameraOrbit->setUserInput(i);
 }
 
 /* ---------------------------------------------------------------- *

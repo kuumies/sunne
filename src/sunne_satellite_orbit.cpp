@@ -33,14 +33,8 @@ struct SatelliteOrbit::Impl
         static float totTime = 0.0f;
         totTime += elapsed;
 
-        const float rotPerSecond = 10.0f;
-        const float seconds = elapsed / 1000.0f;
-        const float rotInc = seconds * rotPerSecond;
-        //std::cout << "sat rot inc: " << rotInc << std::endl;
-        //glm::quat rot = glm::angleAxis(glm::radians(rotInc), glm::vec3(-1.0f, 0.0f, 0.0f));
         glm::quat rot = glm::angleAxis(glm::radians(0.16f), glm::vec3(-1.0f, 0.0f, 0.0f));
         satellite->rotation *= rot;
-        //std::cout << "<< totTime << std::endl;
 
         if (totTime > 31000.0f)
         {
@@ -61,14 +55,6 @@ struct SatelliteOrbit::Impl
                 cut = true;
             }
         }
-
-        if (totTime > 50000.0f)
-        {
-            // cut to somewhere else
-        }
-
-        // quat(-0.436747, {0.899577, 0.000000, 0.000000})
-        // quat(0.956647, {0.291218, 0.000000, 0.000000})
     }
 
     /* ------------------------------------------------------------ *

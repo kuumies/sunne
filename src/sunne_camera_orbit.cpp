@@ -16,6 +16,7 @@ namespace kuu
 namespace sunne
 {
 
+// See: http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-17-quaternions/
 glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest)
 {
     using namespace glm;
@@ -49,9 +50,9 @@ glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest)
         rotationAxis.y * invs,
         rotationAxis.z * invs
     );
-
 }
 
+// See: http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-17-quaternions/
 glm::quat lookAt(glm::vec3 direction,
                  glm::vec3 desiredUp)
 {
@@ -72,42 +73,6 @@ glm::quat lookAt(glm::vec3 direction,
 
     quat targetOrientation = rot2 * rot1; // remember, in reverse order.
     return targetOrientation;
-}
-
-/*-----------------------------------------------------------------*/
-// Calculates quaternion between two vectors so that v1*q = v2
-// http://www.euclideanspace.com/maths/algebra/vectors/angleBetween/index.htm
-//
-glm::quat quaternionBetween(
-    const glm::vec3 &v1,
-    const glm::vec3 &v2,
-    bool normalizedVectors)
-{
-    // Calculate quaternion scalar part
-    double w = 1;
-    if (!normalizedVectors)
-        w = sqrt(glm::length2(v1) * glm::length2(v2));
-    w += glm::dot(v1, v2);
-
-    // Calculate rotation axis
-    glm::vec3 axis = glm::cross(v1, v2);
-
-    // Construct quaternion and normalize it
-    glm::quat rotation(w, axis);
-    return glm::normalize(rotation);
-}
-
-float wrapAngleRadians(float angle)
-{
-    angle = fmod(angle, 2.0f * float(M_PI));
-    if (angle < 0.0f)
-        angle += 2.0f * float(M_PI);
-    return angle;
-}
-
-float wrapAngleDegrees(float angle)
-{
-    return glm::degrees(wrapAngleRadians(glm::radians(angle)));
 }
 
 /* ---------------------------------------------------------------- *
@@ -132,17 +97,10 @@ struct CameraOrbit::Impl
     {
         static float totTime = 0.0f;
         totTime += elapsed;
-//        std::cout << totTime << std::endl;
-        // camera cut: 22550
-
         if (totTime < 23550)
-        //if (false)
         {
             auto camPos = glm::vec3(glm::inverse(camera->viewMatrix()) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
             auto tgtPos = glm::vec3(targetSatellite->matrix()          * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-//            std::cout << glm::to_string(camPos) << " "
-//                      << glm::to_string(tgtPos) << " "
-//                      << glm::to_string(glm::normalize(camPos - tgtPos)) << std::endl;
 
             camera->doubleRot = false;
             camera->rotation = lookAt(glm::normalize(camPos - tgtPos), glm::vec3(0, 1, 0));
@@ -154,7 +112,6 @@ struct CameraOrbit::Impl
         else
         {
             if (totTime < 46000.0f)
-            //if (false)
             {
                 static bool first = true;
                 if (first)
@@ -164,23 +121,10 @@ struct CameraOrbit::Impl
                     first = false;
                 }
 
-                //static int i = -1;
-                //i++;
-                //if (i % 4)
-                //    return;
-
-                //const float rotPerSecond = 2.0f;
-                //const float seconds = elapsed / 1000.0f;
-                //const float rotInc = seconds * rotPerSecond;
-                //target *= glm::angleAxis(glm::radians(rotInc), glm::vec3(-1.0f, 0.0f, 0.0f));
-
-                //camera->rotation  = glm::slerp(camera->rotation,  target, 0.1f);
-
                 auto tgtPos = glm::vec3(targetSatellite->matrix()          * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
                 auto camPos = glm::vec3(glm::inverse(camera->viewMatrix()) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
                 camera->rotation = lookAt(glm::normalize(camPos - tgtPos), glm::vec3(0, 1, 0));
                 camera->position = tgtPos + glm::vec3(10.0f, 10.0f, 10.0f);
-                //  std::cout << glm::to_string(camera->viewMatrix()) << std::endl;
             }
             else if (totTime < 59000.0f)
             {
@@ -192,23 +136,10 @@ struct CameraOrbit::Impl
                     first = false;
                 }
 
-                //static int i = -1;
-                //i++;
-                //if (i % 4)
-                //    return;
-
-                //const float rotPerSecond = 2.0f;
-                //const float seconds = elapsed / 1000.0f;
-                //const float rotInc = seconds * rotPerSecond;
-                //target *= glm::angleAxis(glm::radians(rotInc), glm::vec3(-1.0f, 0.0f, 0.0f));
-
-                //camera->rotation  = glm::slerp(camera->rotation,  target, 0.1f);
-
                 auto tgtPos = glm::vec3(targetSatellite->matrix()          * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
                 auto camPos = glm::vec3(glm::inverse(camera->viewMatrix()) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
                 camera->rotation = lookAt(glm::normalize(camPos - tgtPos), glm::vec3(0, 1, 0));
                 camera->position = tgtPos + glm::vec3(10.0f, 10.0f, -10.0f);
-                //std::cout << glm::to_string(camera->viewMatrix()) << std::endl;
             }
             else
             {
@@ -222,120 +153,10 @@ struct CameraOrbit::Impl
 
                 auto tgtPos = glm::vec3(targetSatellite->matrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
                 auto dir = glm::normalize(tgtPos - glm::vec3(0.0f));
-                //std::cout << glm::to_string(dir) << std::endl;
                 glm::quat rot = lookAt(dir, glm::vec3(0, 1, 0));
                 camera->position = -dir * 21000.0f;
                 camera->rotation = rot;
-                //camera->rotation2 = glm::slerp(camera->rotation2, target2, 0.1f);
             }
-        }
-    }
-
-    /* ------------------------------------------------------------ *
-     * ------------------------------------------------------------ */
-    void setUserInput(const WindowUserInput& ui)
-    {
-        if (ui.type == WindowUserInput::Type::Key)
-        {
-            float a = 0.1f;
-            if (ui.key.key == GLFW_KEY_W)
-                camera->position.z += a;
-            if (ui.key.key == GLFW_KEY_S)
-                camera->position.z -= a;
-            if (ui.key.key == GLFW_KEY_D)
-                camera->position.x += a;
-            if (ui.key.key == GLFW_KEY_A)
-                camera->position.x -= a;
-            if (ui.key.key == GLFW_KEY_E)
-                camera->position.y += a;
-            if (ui.key.key == GLFW_KEY_Q)
-                camera->position.y -= a;
-            //std::cout << glm::to_string(camera->position) << std::endl;
-        }
-
-        if (ui.type == WindowUserInput::Type::Mouse)
-        {
-            if (ui.mouse.status == GLFW_PRESS)
-            {
-                //std::cout << "GLFW_PRESS" << std::endl;
-                prevRotPos = ui.mouse.pos;
-                rotate = true;
-            }
-            else if (ui.mouse.status == GLFW_RELEASE)
-            {
-                //std::cout << "GLFW_RELEASE" << std::endl;
-                prevRotPos = glm::vec2(0.0);
-                rotate = false;
-            }
-        }
-        else if (ui.type == WindowUserInput::Type::Cursor)
-        {
-            if (rotate)
-            {
-                //std::cout << "rotate" << std::endl;
-                glm::vec2 diff = ui.cursor.pos - prevRotPos;
-                prevRotPos = ui.cursor.pos;
-//                std::cout << glm::to_string(diff) << std::endl;
-
-                yaw   += -diff.x * 0.5f;
-                pitch += -diff.y * 0.5f;
-
-                //const glm::vec3 yawAxis   = glm::vec3(0.0f, 1.0f, 0.0f);
-                //y = glm::angleAxis(glm::radians(-yaw), yawAxis);
-                //const glm::vec3 pitchAxis   = glm::vec3(0.0f, 1.0f, 0.0f);
-                //p = glm::angleAxis(glm::radians(-yaw), yawAxis);
-
-                //const glm::vec3 pitchAxis = glm::conjugate(y) * glm::vec3(1.0f, 0.0f, 0.0f);
-                //p = glm::angleAxis(glm::radians(-pitch), pitchAxis);
-                //p *= glm::angleAxis(glm::radians(-diff.x), yawAxis);
-                //y *= glm::angleAxis(glm::radians(-diff.y), pitchAxis);
-                target2 = p * y;
-
-                //target2 *= /*glm::angleAxis(glm::radians(-diff.x), yawAxis) **/ glm::angleAxis(glm::radians(-diff.y), pitchAxis);
-
-
-//                glm::quat yawRot   = glm::angleAxis(glm::radians(yaw),   glm::vec3(0, 1, 0));
-//                glm::quat pitchRot = glm::angleAxis(glm::radians(pitch), yawRot * glm::vec3(1, 0, 0));
-                //target2 = yawRot * pitchRot;
-
-//                target2 = glm::quat(glm::vec3(glm::radians(pitch), glm::radians(yaw), 0.0f));
-
-                //eyeTargetRotation = mouseRotation;
-//                glm::quat rot( glm::conjugate(target2) );
-//                target2 *= glm::angleAxis( glm::radians(-diff.y / 5.0f), rot * glm::vec3(1,0,0));
-//                target2 *= glm::angleAxis( glm::radians(-diff.x / 5.0f), glm::vec3(0,1,0));
-
-
-//                    float rotateChangeAmount_ = 0.5f;
-
-//                    const float yawChange   = -diff.x * rotateChangeAmount_;
-//                    const float pitchChange = -diff.y * rotateChangeAmount_;
-
-//                    glm::vec3 euler(pitch, yaw, 0.0f);
-//                    euler.x += pitchChange;
-//                    euler.y += yawChange;
-
-//                    euler.x = wrapAngleDegrees(euler.x);
-//                    euler.y = wrapAngleDegrees(euler.y);
-
-//                    pitch = euler.x;
-//                    yaw   = euler.y;
-
-//                    const float pitch = glm::radians(pitchChange);
-//                    const float yaw   = glm::radians(yawChange);
-
-//                    glm::vec3 pitchAxis = glm::vec3(1.0f, 0.0f, 0.0f);
-//                    glm::vec3 yawAxis   = glm::vec3(0.0f, 1.0f, 0.0f);
-//                    yawAxis = target2 * yawAxis;
-
-//                    target2 = glm::angleAxis(yaw,   yawAxis)   * target2;
-//                    target2 = glm::angleAxis(pitch, pitchAxis) * target2;
-            }
-        }
-        else if (ui.type == WindowUserInput::Type::Wheel)
-        {
-            camera->lens.focalLength += ui.wheel.pos.y;
-            //std::cout << camera->lens.focalLength << std::endl;
         }
     }
 
@@ -366,9 +187,6 @@ void CameraOrbit::update(float elapsed)
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-void CameraOrbit::setUserInput(const WindowUserInput &ui)
-{ impl->setUserInput(ui); }
-
 void CameraOrbit::setTarget(std::shared_ptr<RendererScene::Satellite> target)
 { impl->targetSatellite = target; }
 

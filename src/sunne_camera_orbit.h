@@ -22,7 +22,6 @@ public:
     CameraOrbit(std::shared_ptr<RendererScene::Camera> camera);
 
     void update(float elapsed);
-    void setUserInput(const WindowUserInput& ui);
     void setTarget(std::shared_ptr<RendererScene::Satellite> target);
 
 private:

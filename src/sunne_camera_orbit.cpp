@@ -164,6 +164,11 @@ struct CameraOrbit::Impl
                     first = false;
                 }
 
+                //static int i = -1;
+                //i++;
+                //if (i % 4)
+                //    return;
+
                 //const float rotPerSecond = 2.0f;
                 //const float seconds = elapsed / 1000.0f;
                 //const float rotInc = seconds * rotPerSecond;
@@ -175,7 +180,7 @@ struct CameraOrbit::Impl
                 auto camPos = glm::vec3(glm::inverse(camera->viewMatrix()) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
                 camera->rotation = lookAt(glm::normalize(camPos - tgtPos), glm::vec3(0, 1, 0));
                 camera->position = tgtPos + glm::vec3(10.0f, 10.0f, 10.0f);
-                std::cout << glm::to_string(camera->position) << std::endl;
+                //std::cout << glm::to_string(camera->position) << std::endl;
             }
             else //if (totTime < 59000.0f)
             {
@@ -191,7 +196,7 @@ struct CameraOrbit::Impl
                 auto dir = glm::normalize(tgtPos - glm::vec3(0.0f));
                 if (dir.z > 0.0f)
                     dir.z = -dir.z;
-                std::cout << glm::to_string(dir) << std::endl;
+                //std::cout << glm::to_string(dir) << std::endl;
                 glm::quat rot = lookAt(dir, glm::vec3(0, 1, 0));
                 camera->position = -dir * 21000.0f;
                 camera->rotation = rot;
@@ -219,20 +224,20 @@ struct CameraOrbit::Impl
                 camera->position.y += a;
             if (ui.key.key == GLFW_KEY_Q)
                 camera->position.y -= a;
-            std::cout << glm::to_string(camera->position) << std::endl;
+            //std::cout << glm::to_string(camera->position) << std::endl;
         }
 
         if (ui.type == WindowUserInput::Type::Mouse)
         {
             if (ui.mouse.status == GLFW_PRESS)
             {
-                std::cout << "GLFW_PRESS" << std::endl;
+                //std::cout << "GLFW_PRESS" << std::endl;
                 prevRotPos = ui.mouse.pos;
                 rotate = true;
             }
             else if (ui.mouse.status == GLFW_RELEASE)
             {
-                std::cout << "GLFW_RELEASE" << std::endl;
+                //std::cout << "GLFW_RELEASE" << std::endl;
                 prevRotPos = glm::vec2(0.0);
                 rotate = false;
             }
@@ -241,7 +246,7 @@ struct CameraOrbit::Impl
         {
             if (rotate)
             {
-                std::cout << "rotate" << std::endl;
+                //std::cout << "rotate" << std::endl;
                 glm::vec2 diff = ui.cursor.pos - prevRotPos;
                 prevRotPos = ui.cursor.pos;
 //                std::cout << glm::to_string(diff) << std::endl;
@@ -304,7 +309,7 @@ struct CameraOrbit::Impl
         else if (ui.type == WindowUserInput::Type::Wheel)
         {
             camera->lens.focalLength += ui.wheel.pos.y;
-            std::cout << camera->lens.focalLength << std::endl;
+            //std::cout << camera->lens.focalLength << std::endl;
         }
     }
 

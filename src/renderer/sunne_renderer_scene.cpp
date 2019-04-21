@@ -89,7 +89,7 @@ RendererScene::RendererScene()
     //camera.position = glm::vec3(0.0f, 0.0f, 10.0f);
     camera->farPlane = distance * 3;
     camera->lens.focalLength = 14.0f;
-    std::cout << distance << std::endl;
+    //std::cout << distance << std::endl;
 
     // Satellite
     satellite = std::make_shared<Satellite>();

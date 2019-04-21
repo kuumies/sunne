@@ -4,6 +4,7 @@
  * ---------------------------------------------------------------- */
 
 #include "sunne_controller.h"
+#include <iostream>
 #include "renderer/opengl/sunne_opengl_renderer.h"
 #include "renderer/sunne_renderer_scene.h"
 #include "window/sunne_opengl_window.h"
@@ -163,11 +164,25 @@ void Controller::update(double elapsed)
 
     static float totTime = 0.0;
     totTime += elapsed;
-    if (totTime < 2000.0f)
+    if (totTime < 5000.0f)
         return;
 
     if (impl->paused)
         return;
+
+    if (totTime > 45000.0f)
+    {
+        static bool set = false;
+        if (!set)
+        {
+            impl->scene->planets[0]->rotate = true;
+            impl->scene->camera->position = glm::vec3(100.000000, 48.000000, 11000.000000);
+            impl->scene->camera->rotation = glm::quat();
+            impl->scene->camera->lens.focalLength = 14.0f;
+            set = true;
+        }
+        return;
+    }
 
     impl->cameraOrbit->update(float(elapsed));
     impl->satelliteOrbit->update(float(elapsed));

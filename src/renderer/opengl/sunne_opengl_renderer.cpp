@@ -9,6 +9,7 @@
 #include "sunne_opengl_atmosphere_effect_render.h"
 #include "sunne_opengl_compose.h"
 #include "sunne_opengl_loading.h"
+#include "sunne_opengl_planet.h"
 #include "sunne_opengl_resources.h"
 #include "sunne_opengl_shading_render.h"
 #include "sunne_opengl_star_effect_render.h"
@@ -32,6 +33,7 @@ struct OpenGLRenderer::Impl
         shading          = std::make_shared<OpenGLShadingRender>(size, resources);
         atmosphereEffect = std::make_shared<OpenGLAtmosphereEffectRender>(size);
         starEffect       = std::make_shared<OpenGLStarEffectRender>(size);
+        planet           = std::make_shared<OpenGLPlanet>(size);
         compose          = std::make_shared<OpenGLCompose>();
     }
 
@@ -43,12 +45,15 @@ struct OpenGLRenderer::Impl
         shading->resize(newSize);
         atmosphereEffect->resize(newSize);
         starEffect->resize(newSize);
+        planet->resize(newSize);
     }
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
     void loadResources(std::shared_ptr<RendererScene> scene)
     {
+        planet->setPlanet(scene->planets.front());
+        planet->loadResources();
         shading->load(scene);
     }
 
@@ -58,6 +63,9 @@ struct OpenGLRenderer::Impl
     {
         shading->draw(scene);
         atmosphereEffect->draw(scene);
+        planet->setPlanet(scene->planets.front());
+        planet->draw(scene->camera->viewMatrix(),
+                     scene->camera->projectionMatrix());
         starEffect->draw();
         glEnable(GL_DEPTH_TEST);
         glClearColor(1.0f, 0.2f, 0.2f, 1.0f);
@@ -66,6 +74,7 @@ struct OpenGLRenderer::Impl
         compose->shadingTexMap    = shading->tex;
         compose->atmosphereTexMap = atmosphereEffect->tex;
         compose->starTexMap       = starEffect->tex;
+        compose->planetTexMap     = planet->tex;
         compose->draw();
     }
 
@@ -87,6 +96,7 @@ struct OpenGLRenderer::Impl
     std::shared_ptr<OpenGLShadingRender> shading;
     std::shared_ptr<OpenGLAtmosphereEffectRender> atmosphereEffect;
     std::shared_ptr<OpenGLStarEffectRender> starEffect;
+    std::shared_ptr<OpenGLPlanet> planet;
     std::shared_ptr<OpenGLCompose> compose;
 };
 

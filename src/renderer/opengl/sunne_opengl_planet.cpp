@@ -34,13 +34,39 @@ struct OpenGLPlanet::Impl
 {
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
-    Impl(const std::shared_ptr<RendererScene::Planet> planet)
-        : planet(planet)
+    Impl(OpenGLPlanet* self, const ivec2& size)
+        : self(self)
+        , size(size)
     {
         //createMeshBuffers();
         //createMeshVao();
         //createTextures();
         createShader();
+        createTexture();
+        createRenderbuffer();
+        createFramebuffer();
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    void createTexture()
+    {
+        glGenTextures(1, &self->tex);
+        glBindTexture(GL_TEXTURE_2D, self->tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_CLAMP_TO_EDGE);
+        glTexImage2D(GL_TEXTURE_2D, 0,
+                     GL_RGB16F, size.x, size.y, 0,
+                     GL_RGB, GL_FLOAT, nullptr);
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    void destroyTexture()
+    {
+        glDeleteTextures(1, &self->tex);
     }
 
     /* ------------------------------------------------------------ *
@@ -165,43 +191,6 @@ struct OpenGLPlanet::Impl
             }
         }
 
-        //        const float ringStep   = 1.0f / float(ringCount   - 1);
-//        const float sectorStep = 1.0f / float(sectorCount - 1);
-
-//        std::vector<Vertex> vertexData;
-//        for(int r = 0; r < ringCount;   ++r)
-//        for(int s = 0; s < sectorCount; ++s)
-//        {
-//            float y = sin(half_pi + pi * r * ringStep);
-//            float x = cos(2.0f * pi * s * sectorStep) * sin(pi * r * ringStep);
-//            float z = sin(2.0f * pi * s * sectorStep) * sin(pi * r * ringStep);
-
-//            Vertex v;
-//            v.pos = vec3(x, y, z) * radius;
-//            v.texCoord = vec2(s * sectorStep, r * ringStep);
-//            v.normal = normalize(v.pos);
-
-//            vertexData.push_back(v);
-//        }
-
-//        std::vector<unsigned int> indexData;
-//        for(int r = 0; r < ringCount   - 1; r++)
-//        for(int s = 0; s < sectorCount - 1; s++)
-//        {
-//            unsigned ia = unsigned((r+0) * sectorCount + (s+0));
-//            unsigned ib = unsigned((r+0) * sectorCount + (s+1));
-//            unsigned ic = unsigned((r+1) * sectorCount + (s+1));
-//            unsigned id = unsigned((r+1) * sectorCount + (s+0));
-
-//            indexData.push_back(id);
-//            indexData.push_back(ia);
-//            indexData.push_back(ib);
-
-//            indexData.push_back(ib);
-//            indexData.push_back(ic);
-//            indexData.push_back(id);
-//        }
-
         indexCount = GLsizei(indexData.size());
 
         for (size_t i = 0; i < indexData.size(); i += 3)
@@ -294,15 +283,16 @@ struct OpenGLPlanet::Impl
         pgm = opengl_shader_loader::load(
                 "shaders/sunne_opengl_planet.vsh",
                 "shaders/sunne_opengl_planet.fsh");
-        uniformProjectionMatrix = glGetUniformLocation(pgm, "matrices.projection");
-        uniformViewMatrix       = glGetUniformLocation(pgm, "matrices.view");
-        uniformModelMatrix      = glGetUniformLocation(pgm, "matrices.model");
-        uniformNormalMatrix     = glGetUniformLocation(pgm, "matrices.normal");
-        uniformAlbedoMap        = glGetUniformLocation(pgm, "albedoMap");
-        uniformNormalMap        = glGetUniformLocation(pgm, "normalMap");
-        uniformSpecularMap      = glGetUniformLocation(pgm, "specularMap");
-        uniformCloudMap         = glGetUniformLocation(pgm, "cloudMap");
-        uniformNightMap         = glGetUniformLocation(pgm, "nightMap");
+        uniformProjectionMatrix       = glGetUniformLocation(pgm, "matrices.projection");
+        uniformViewMatrix             = glGetUniformLocation(pgm, "matrices.view");
+        uniformModelMatrix            = glGetUniformLocation(pgm, "matrices.model");
+        uniformNormalMatrix           = glGetUniformLocation(pgm, "matrices.normal");
+        uniformAlbedoMap              = glGetUniformLocation(pgm, "albedoMap");
+        uniformNormalMap              = glGetUniformLocation(pgm, "normalMap");
+        uniformSpecularMap            = glGetUniformLocation(pgm, "specularMap");
+        uniformCloudMap               = glGetUniformLocation(pgm, "cloudMap");
+        uniformNightMap               = glGetUniformLocation(pgm, "nightMap");
+        uniformCloudMapTexCoordOffset = glGetUniformLocation(pgm, "cloudMapTexCoordOffset");
     }
 
     /* ------------------------------------------------------------ *
@@ -320,6 +310,67 @@ struct OpenGLPlanet::Impl
         glDeleteBuffers(1, &vbo);
         glDeleteBuffers(1, &ibo);
         destroyShader();
+        destroyFramebuffer();
+        destroyRenderbuffer();
+        destroyTexture();
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    void createRenderbuffer()
+    {
+        glGenRenderbuffers(1, &rbo);
+        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24,
+                              size.x, size.y);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    void destroyRenderbuffer()
+    {
+        glDeleteRenderbuffers(1, &rbo);
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    void createFramebuffer()
+    {
+        glGenFramebuffers(1, &fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        glFramebufferTexture2D(GL_FRAMEBUFFER,
+                               GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D,
+                               self->tex,
+                               0);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER,
+                                  GL_DEPTH_ATTACHMENT,
+                                  GL_RENDERBUFFER,
+                                  rbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    void destroyFramebuffer()
+    {
+        glDeleteFramebuffers(1, &fbo);
+    }
+
+    /* ------------------------------------------------------------ *
+     * ------------------------------------------------------------ */
+    void resize(const glm::ivec2& newSize)
+    {
+        size = newSize;
+
+        destroyTexture();
+        destroyRenderbuffer();
+        destroyFramebuffer();
+
+        createTexture();
+        createRenderbuffer();
+        createFramebuffer();
     }
 
     /* ------------------------------------------------------------ *
@@ -337,7 +388,13 @@ struct OpenGLPlanet::Impl
         {
             createMeshBuffers();
             createMeshVao();
+            //createTextures();
         }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+        glViewport(0, 0, size.x, size.y);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texAlbedo);
@@ -350,9 +407,24 @@ struct OpenGLPlanet::Impl
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, texNight);
 
+        static glm::quat rot2;
+
+
         const glm::quat rot = glm::angleAxis(glm::radians(planet->inclination), glm::vec3(0.0f, 0.0f, 1.0f));
-        const glm::mat4 modelMatrix  = glm::mat4_cast(rot);
+        float amount = 0.0005f;
+        if (planet->rotate)
+            amount = 0.05f;
+        rot2 *= glm::angleAxis(glm::radians(amount), glm::vec3(0.0f, 1.0f, 0.0f));
+
+        const glm::mat4 modelMatrix  = glm::mat4_cast(rot * rot2);
         const glm::mat3 normalMatrix = glm::mat3(glm::inverseTranspose(modelMatrix));
+
+        static glm::vec2 texOffset;
+        texOffset.x -= 0.00001f;
+        if (texOffset.x > 1.0f)
+            texOffset.x = 1.0f - texOffset.x;
+        if (texOffset.x < 0.0f)
+            texOffset.x = 1.0f + texOffset.x;
 
         glUseProgram(pgm);
         glUniformMatrix4fv(uniformModelMatrix, 1,
@@ -368,15 +440,23 @@ struct OpenGLPlanet::Impl
         glUniform1i(uniformSpecularMap, 2);
         glUniform1i(uniformCloudMap,    3);
         glUniform1i(uniformNightMap,    4);
+        glUniform2fv(uniformCloudMapTexCoordOffset, 1,
+                     glm::value_ptr(texOffset));
 
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
         glBindVertexArray(0);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     /* ------------------------------------------------------------ *
      * ------------------------------------------------------------ */
+    OpenGLPlanet* self;
     std::shared_ptr<RendererScene::Planet> planet;
+    ivec2 size;
+    GLuint rbo = 0;
+    GLuint fbo = 0;
     GLuint vao = 0;
     GLuint vbo;
     GLuint ibo;
@@ -396,18 +476,31 @@ struct OpenGLPlanet::Impl
     GLint uniformSpecularMap;
     GLint uniformCloudMap;
     GLint uniformNightMap;
+    GLint uniformCloudMapTexCoordOffset;
 };
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
-OpenGLPlanet::OpenGLPlanet(std::shared_ptr<RendererScene::Planet> planet)
-    : impl(std::make_shared<Impl>(planet))
+OpenGLPlanet::OpenGLPlanet(const ivec2& size)
+    : impl(std::make_shared<Impl>(this, size))
 {}
+
+/* ---------------------------------------------------------------- *
+ * ---------------------------------------------------------------- */
+void OpenGLPlanet::setPlanet(std::shared_ptr<RendererScene::Planet> planet)
+{
+    impl->planet = planet;
+}
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
 void OpenGLPlanet::loadResources()
 { impl->loadResources(); }
+
+/* ---------------------------------------------------------------- *
+ * ---------------------------------------------------------------- */
+void OpenGLPlanet::resize(const ivec2& size)
+{ impl->resize(size); }
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */

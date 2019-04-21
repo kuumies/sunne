@@ -26,12 +26,14 @@ struct Matrices
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
 uniform Matrices matrices;
+uniform vec2 cloudMapTexCoordOffset;
 
 /* ---------------------------------------------------------------- *
  * ---------------------------------------------------------------- */
 out struct VsOut
 {
     vec2 texCoord;
+    vec2 texCoordCloud;
     vec3 worldNormal;
     vec3 worldPos;
     vec3 cameraPos;
@@ -52,7 +54,10 @@ void main()
     b = cross(n, t);
 
     vsOut.texCoord    = texCoord;
+    vsOut.texCoord.x  = 1.0 - vsOut.texCoord.x;
     vsOut.texCoord.y  = 1.0 - vsOut.texCoord.y;
+    vsOut.texCoordCloud = vsOut.texCoord;
+    vsOut.texCoordCloud += cloudMapTexCoordOffset;
     vsOut.worldNormal = matrices.normal * normal;
     vsOut.worldPos    = vec3(matrices.model * vec4(position, 1.0));
     vsOut.cameraPos   = vec3(matrices.model * matrices.view * vec4(position, 1.0));

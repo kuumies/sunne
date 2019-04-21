@@ -81,6 +81,7 @@ public:
         std::string normalMap;
         std::string cloudMap;
         std::string nightMap;
+        bool rotate = false;
     };
 
     /* ------------------------------------------------------------ *

@@ -25,6 +25,7 @@ public:
     float exposure          = 0.8f;
     GLuint shadingTexMap    = 0;
     GLuint atmosphereTexMap = 0;
+    GLuint planetTexMap     = 0;
     GLuint starTexMap       = 0;
 
 private:

@@ -52,8 +52,8 @@ struct OpenGLShadingRender::Impl
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_CLAMP_TO_EDGE);
         glTexImage2D(GL_TEXTURE_2D, 0,
-                     GL_RGB16F, size.x, size.y, 0,
-                     GL_RGB, GL_FLOAT, nullptr);
+                     GL_RGBA16F, size.x, size.y, 0,
+                     GL_RGBA, GL_FLOAT, nullptr);
     }
 
     /* ------------------------------------------------------------ *
@@ -125,8 +125,8 @@ struct OpenGLShadingRender::Impl
      * ------------------------------------------------------------ */
     void load(std::shared_ptr<RendererScene> scene)
     {
-        for (std::shared_ptr<RendererScene::Planet> planet : scene->planets)
-            resources->openglPlanet(planet)->loadResources();
+        //for (std::shared_ptr<RendererScene::Planet> planet : scene->planets)
+        //    resources->openglPlanet(planet, size)->loadResources();
         //resources->openglSatellite()->loadResources();
     }
 
@@ -144,8 +144,8 @@ struct OpenGLShadingRender::Impl
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         resources->openglSatellite(scene->satellite)->draw(view, projection);
-        for (std::shared_ptr<RendererScene::Planet> planet : scene->planets)
-            resources->openglPlanet(planet)->draw(view, projection);
+        //for (std::shared_ptr<RendererScene::Planet> planet : scene->planets)
+        //    resources->openglPlanet(planet, size)->draw(view, projection);
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }

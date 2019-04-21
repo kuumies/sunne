@@ -6,6 +6,7 @@
 #pragma once
 
 #include <memory>
+#include <glad/glad.h>
 #include "../sunne_renderer_scene.h"
 
 namespace kuu
@@ -18,11 +19,15 @@ namespace sunne
 class OpenGLPlanet
 {
 public:
-    OpenGLPlanet(std::shared_ptr<RendererScene::Planet> planet);
+    OpenGLPlanet(const glm::ivec2& size);
 
+    void setPlanet(std::shared_ptr<RendererScene::Planet> planet);
     void loadResources();
+    void resize(const glm::ivec2& size);
     void draw(const glm::mat4& view,
               const glm::mat4& projection);
+
+    GLuint tex = 0;
 
 private:
     struct Impl;

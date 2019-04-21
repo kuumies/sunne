@@ -18,6 +18,7 @@ uniform sampler2D nightMap;
 in struct VsOut
 {
     vec2 texCoord;
+    vec2 texCoordCloud;
     vec3 worldNormal;
     vec3 worldPos;
     vec3 cameraPos;
@@ -51,7 +52,7 @@ void main()
     if (nDotL > 0)
     {
         albedo = texture(albedoMap, tc).rgb;
-        vec4 clouds = texture(cloudMap,  vsOut.texCoord);
+        vec4 clouds = texture(cloudMap,  vsOut.texCoordCloud);
         albedo = mix(albedo, clouds.rgb, clouds.a) * nDotL;
     }
     else

@@ -43,6 +43,7 @@ struct OpenGLCompose::Impl
         uniformShadingTexMap    = glGetUniformLocation(pgm, "shadingTexMap");
         uniformAtmosphereTexMap = glGetUniformLocation(pgm, "atmosphereTexMap");
         uniformStarTexMap       = glGetUniformLocation(pgm, "starTexMap");
+        uniformPlanetTexMap     = glGetUniformLocation(pgm, "planetTexMap");
         uniformExposure         = glGetUniformLocation(pgm, "exposure");
     }
 
@@ -80,10 +81,14 @@ struct OpenGLCompose::Impl
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, self->starTexMap);
 
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, self->planetTexMap);
+
         glUseProgram(pgm);
         glUniform1i(uniformShadingTexMap,    0);
         glUniform1i(uniformAtmosphereTexMap, 1);
         glUniform1i(uniformStarTexMap,       2);
+        glUniform1i(uniformPlanetTexMap,     3);
         glUniform1f(uniformExposure,         self->exposure);
 
         ndcQuad->draw();
@@ -96,6 +101,7 @@ struct OpenGLCompose::Impl
     GLint uniformShadingTexMap;
     GLint uniformAtmosphereTexMap;
     GLint uniformStarTexMap;
+    GLint uniformPlanetTexMap;
     GLint uniformExposure;
     std::shared_ptr<NdcQuadMesh> ndcQuad;
 };

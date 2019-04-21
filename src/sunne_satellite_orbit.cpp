@@ -30,30 +30,26 @@ struct SatelliteOrbit::Impl
      * ------------------------------------------------------------ */
     void update(float elapsed)
     {
-        static float totTime = 0.0f;
         totTime += elapsed;
 
-        glm::quat rot = glm::angleAxis(glm::radians(0.16f), glm::vec3(-1.0f, 0.0f, 0.0f));
+        const float step = 0.16f; // note: v-sync is enabled
+        glm::quat rot = glm::angleAxis(glm::radians(step), glm::vec3(-1.0f, 0.0f, 0.0f));
         satellite->rotation *= rot;
 
-        if (totTime > 31000.0f)
+        const float cutTimeA = 31000.0f;
+        const float cutTimeB = 46000.0f;
+        const glm::quat cutRot = glm::quat(0.956647f, glm::vec3(0.3f, 0.0f, 0.0f));
+
+        if (totTime >= cutTimeA && !cutSetA)
         {
-            static bool cut = false;
-            if (!cut)
-            {
-                satellite->rotation = glm::quat(0.956647, glm::vec3(0.291218, 0.000000, 0.000000));
-                cut = true;
-            }
+            satellite->rotation = cutRot;
+            cutSetA = true;
         }
 
-        if (totTime >= 46000.0f)
+        if (totTime >= cutTimeB && !cutSetB)
         {
-            static bool cut = false;
-            if (!cut)
-            {
-                satellite->rotation = glm::quat(0.956647, glm::vec3(0.291218, 0.000000, 0.000000));
-                cut = true;
-            }
+            satellite->rotation = cutRot;
+            cutSetB = true;
         }
     }
 
@@ -61,6 +57,9 @@ struct SatelliteOrbit::Impl
      * ------------------------------------------------------------ */
     SatelliteOrbit* self;
     std::shared_ptr<RendererScene::Satellite> satellite;
+    float totTime = 0.0f;
+    bool cutSetA = false;
+    bool cutSetB = false;
 };
 
 /* ---------------------------------------------------------------- *

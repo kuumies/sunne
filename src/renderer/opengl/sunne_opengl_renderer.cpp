@@ -67,6 +67,7 @@ struct OpenGLRenderer::Impl
         planet->draw(scene->camera->viewMatrix(),
                      scene->camera->projectionMatrix());
         starEffect->draw();
+
         glEnable(GL_DEPTH_TEST);
         glClearColor(1.0f, 0.2f, 0.2f, 1.0f);
         glViewport(0, 0, size.x, size.y);

@@ -180,7 +180,7 @@ struct CameraOrbit::Impl
                 auto camPos = glm::vec3(glm::inverse(camera->viewMatrix()) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
                 camera->rotation = lookAt(glm::normalize(camPos - tgtPos), glm::vec3(0, 1, 0));
                 camera->position = tgtPos + glm::vec3(10.0f, 10.0f, 10.0f);
-                //std::cout << glm::to_string(camera->position) << std::endl;
+                std::cout << glm::to_string(camera->viewMatrix()) << std::endl;
             }
             else //if (totTime < 59000.0f)
             {

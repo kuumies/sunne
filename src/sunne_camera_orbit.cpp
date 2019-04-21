@@ -135,7 +135,7 @@ struct CameraOrbit::Impl
 //        std::cout << totTime << std::endl;
         // camera cut: 22550
 
-        if (totTime < 22550)
+        if (totTime < 23550)
         //if (false)
         {
             auto camPos = glm::vec3(glm::inverse(camera->viewMatrix()) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
@@ -153,7 +153,7 @@ struct CameraOrbit::Impl
         }
         else
         {
-            if (totTime < 45000.0f)
+            if (totTime < 46000.0f)
             //if (false)
             {
                 static bool first = true;
@@ -180,9 +180,37 @@ struct CameraOrbit::Impl
                 auto camPos = glm::vec3(glm::inverse(camera->viewMatrix()) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
                 camera->rotation = lookAt(glm::normalize(camPos - tgtPos), glm::vec3(0, 1, 0));
                 camera->position = tgtPos + glm::vec3(10.0f, 10.0f, 10.0f);
-                std::cout << glm::to_string(camera->viewMatrix()) << std::endl;
+                //  std::cout << glm::to_string(camera->viewMatrix()) << std::endl;
             }
-            else //if (totTime < 59000.0f)
+            else if (totTime < 59000.0f)
+            {
+                static bool first = true;
+                if (first)
+                {
+                    camera->position = glm::vec3(0.000000, 48.000000, 7048.000000);
+                    camera->lens.focalLength = 40.0f;
+                    first = false;
+                }
+
+                //static int i = -1;
+                //i++;
+                //if (i % 4)
+                //    return;
+
+                //const float rotPerSecond = 2.0f;
+                //const float seconds = elapsed / 1000.0f;
+                //const float rotInc = seconds * rotPerSecond;
+                //target *= glm::angleAxis(glm::radians(rotInc), glm::vec3(-1.0f, 0.0f, 0.0f));
+
+                //camera->rotation  = glm::slerp(camera->rotation,  target, 0.1f);
+
+                auto tgtPos = glm::vec3(targetSatellite->matrix()          * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+                auto camPos = glm::vec3(glm::inverse(camera->viewMatrix()) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+                camera->rotation = lookAt(glm::normalize(camPos - tgtPos), glm::vec3(0, 1, 0));
+                camera->position = tgtPos + glm::vec3(10.0f, 10.0f, -10.0f);
+                //std::cout << glm::to_string(camera->viewMatrix()) << std::endl;
+            }
+            else
             {
                 static bool first = true;
                 if (first)
@@ -194,8 +222,6 @@ struct CameraOrbit::Impl
 
                 auto tgtPos = glm::vec3(targetSatellite->matrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
                 auto dir = glm::normalize(tgtPos - glm::vec3(0.0f));
-                if (dir.z > 0.0f)
-                    dir.z = -dir.z;
                 //std::cout << glm::to_string(dir) << std::endl;
                 glm::quat rot = lookAt(dir, glm::vec3(0, 1, 0));
                 camera->position = -dir * 21000.0f;

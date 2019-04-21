@@ -412,9 +412,13 @@ struct OpenGLPlanet::Impl
 
         const glm::quat rot = glm::angleAxis(glm::radians(planet->inclination), glm::vec3(0.0f, 0.0f, 1.0f));
         float amount = 0.0005f;
+        glm::vec3 axis = glm::vec3(0.0f, 1.0f, 0.0f);
         if (planet->rotate)
+        {
             amount = 0.05f;
-        rot2 *= glm::angleAxis(glm::radians(amount), glm::vec3(0.0f, 1.0f, 0.0f));
+            axis = planet->rotateAxis;
+        }
+        rot2 *= glm::angleAxis(glm::radians(amount), axis);
 
         const glm::mat4 modelMatrix  = glm::mat4_cast(rot * rot2);
         const glm::mat3 normalMatrix = glm::mat3(glm::inverseTranspose(modelMatrix));

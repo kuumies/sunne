@@ -170,12 +170,13 @@ void Controller::update(double elapsed)
     if (impl->paused)
         return;
 
-    if (totTime > 45000.0f)
+    if (totTime > 64000.0f)
     {
         static bool set = false;
         if (!set)
         {
             impl->scene->planets[0]->rotate = true;
+            impl->scene->planets[0]->rotateAxis = glm::vec3(0, 1, 0);
             impl->scene->camera->position = glm::vec3(100.000000, 48.000000, 11000.000000);
             impl->scene->camera->rotation = glm::quat();
             impl->scene->camera->lens.focalLength = 14.0f;

@@ -82,6 +82,7 @@ public:
         std::string cloudMap;
         std::string nightMap;
         bool rotate = false;
+        glm::vec3 rotateAxis = glm::vec3(0, 1, 0);
     };
 
     /* ------------------------------------------------------------ *

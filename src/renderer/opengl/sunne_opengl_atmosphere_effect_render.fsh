@@ -1,6 +1,10 @@
 /* ---------------------------------------------------------------- *
    Antti Jumpponen <kuumies@gmail.com>
    kuu::OpenGLAtmosphereEffectRender fragment shader.
+
+   See: https://www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/simulating-sky/simulating-colors-of-the-sky
+        https://www.shadertoy.com/view/XlXGzB
+
  * ---------------------------------------------------------------- */
  
 #version 330 core

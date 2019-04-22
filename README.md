@@ -1,2 +1,2 @@
 # sunne
-A solar system
+A planet renderer. Program renders Earth from the space and the camera follows a satellite that is orbiting around the planet.
